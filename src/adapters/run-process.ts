@@ -66,6 +66,11 @@ export function killProcessTree(
   });
 }
 
+/** How many children started through runProcess have not closed yet. */
+export function runningProcessCount(): number {
+  return running.size;
+}
+
 /** Kills every child started through runProcess (used when shutting down). Returns how many were killed. */
 export function killRunningProcesses(): number {
   const children = [...running];

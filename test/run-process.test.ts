@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildKillPlan, killProcessTree, killRunningProcesses, runProcess } from '../src/adapters/run-process.js';
+import { buildKillPlan, killProcessTree, killRunningProcesses, runningProcessCount, runProcess } from '../src/adapters/run-process.js';
 
 describe('runProcess', () => {
   it('collects output and exit code', async () => {
@@ -14,6 +14,10 @@ describe('runProcess', () => {
   });
 
   it('kills every running child on demand', async () => {
+    // On Windows the previous test's tree kill (taskkill) is asynchronous: wait until its child has closed.
+    const deadline = Date.now() + 5000;
+    while (runningProcessCount() > 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 50));
+    expect(runningProcessCount()).toBe(0);
     const running = runProcess('node', ['-e', 'setTimeout(() => {}, 30000)']);
     await new Promise((r) => setTimeout(r, 100));
     expect(killRunningProcesses()).toBe(1);
