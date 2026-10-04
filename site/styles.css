@@ -1,0 +1,281 @@
+/* discord-scribe landing page, light palette only. No external requests: the two fonts are self-hosted in fonts/ (SIL OFL, see fonts/OFL.txt). */
+
+/* Latin subsets of two variable fonts: Fraunces (display serif) and Caveat (handwritten accent). */
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/fraunces-latin.woff2") format("woff2");
+  font-weight: 700 800; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Caveat";
+  src: url("fonts/caveat-latin.woff2") format("woff2");
+  font-weight: 600 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  color-scheme: light;
+  --bg: #f3ecdc;
+  --surface: #fffaee;
+  --ink: #1b1a17;
+  --muted: #5a5448;
+  --rule: #d9d1bf;
+  --line: #1b1a17;          /* outlines of cards and buttons */
+  --shadow: #1b1a17;        /* hard offset shadows */
+  --accent: #ff6a52;        /* fills; dark ink on it is 6.2:1 */
+  --accent-ink: #c4311f;    /* small accent text, AA on bg and surface */
+  --accent-big: #dd4128;    /* large accent text only (3:1) */
+  --on-accent: #1b1a17;
+  --chip: #ffe3d5;          /* soft coral tint behind chips and callouts */
+  --dark: #1b1a17;
+  --term-bg: #1b1a17;
+  --term-fg: #efe9db;
+  --display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --off: 6px;               /* offset of the hard shadow */
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 1.0625rem/1.6 var(--sans); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+.wrap { width: min(100% - 2rem, 68rem); margin-inline: auto; }
+section.wrap { padding-block: clamp(3rem, 8vw, 5rem); }
+section.hero { padding-top: clamp(2.5rem, 7vw, 4.5rem); text-align: center; }
+
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+a:hover { color: var(--accent-ink); }
+:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 3px; }
+
+h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; margin: 0 0 .5em; text-wrap: balance; }
+h1 { max-width: 17em; margin-inline: auto; font-size: clamp(2.5rem, 7.5vw, 4.75rem); letter-spacing: -.028em; line-height: 1.02; }
+h2 { max-width: 18em; margin-inline: auto; text-align: center; font-size: clamp(2rem, 5.2vw, 3.4rem); }
+h3 { font-size: 1.35rem; font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
+h2 code {
+  padding: .05em .35em; font-size: .72em; font-weight: 700; letter-spacing: 0; vertical-align: .08em;
+  background: var(--chip); border: 2px solid var(--line); border-radius: .4em;
+}
+.nb { white-space: nowrap; }
+p { margin: 0 0 1em; }
+
+code, pre { font-family: var(--mono); font-size: .9em; }
+code { background: rgba(128, 128, 128, .15); background: color-mix(in srgb, var(--ink) 8%, transparent); padding: .1em .35em; border-radius: .25rem; overflow-wrap: anywhere; }
+pre code { background: none; padding: 0; font-size: 1em; overflow-wrap: normal; }
+
+.skip { position: absolute; left: -999px; top: .5rem; background: var(--ink); color: var(--bg); padding: .5rem 1rem; z-index: 10; }
+.skip:focus { left: .5rem; }
+
+/* Soft neo-brutalist cards: ink outline, generous radius, solid offset shadow with no blur. */
+.steps li, .cards li, .stat, .panel, .consent, .faq, .mock, .finale, pre {
+  border: 2px solid var(--line); border-radius: 1rem; box-shadow: var(--off) var(--off) 0 var(--shadow);
+}
+.steps li, .cards li, .stat, .panel, .consent, .faq, .mock { background: var(--surface); }
+.stat, .mock, .finale { --off: 8px; }
+@media (max-width: 30rem) { :root { --off: 5px; } .stat, .mock, .finale { --off: 6px; } }
+
+/* Header: a cream bar with an ink rule under it. */
+.top { background: var(--surface); border-bottom: 2px solid var(--line); }
+.bar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .25rem 2rem; padding-block: .85rem; }
+.brand { display: inline-flex; align-items: center; gap: .6rem; font: 800 1.4rem/1 var(--display); letter-spacing: -.02em; text-decoration: none; }
+.brand img { flex: none; width: 2rem; height: 2rem; }
+.brand:hover { color: inherit; }
+.top nav { display: flex; flex-wrap: wrap; gap: 0 1.4rem; font-size: .98rem; font-weight: 600; }
+.top nav a { padding: .45rem 0; text-decoration: none; }
+.top nav a:hover { color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 3px; }
+@media (max-width: 54rem) {
+  .bar { grid-template-columns: 1fr auto; }
+  .top nav { grid-column: 1 / -1; grid-row: 2; gap: 0 1.1rem; }
+}
+
+/* Pill buttons with the same hard shadow; the press movement only runs when motion is welcome. */
+.actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem 1.25rem; margin: 1.75rem 0 0; }
+.btn {
+  --bo: 4px; --btn-bg: var(--surface); --btn-fg: var(--ink);
+  display: inline-block; padding: .8rem 1.6rem; border: 2px solid var(--line); border-radius: 999px;
+  background: var(--btn-bg); color: var(--btn-fg); box-shadow: var(--bo) var(--bo) 0 var(--shadow);
+  font-weight: 700; line-height: 1.3; text-align: center; text-decoration: none;
+}
+.btn.primary { --btn-bg: var(--accent); --btn-fg: var(--on-accent); }
+.btn.sm { --bo: 3px; padding: .5rem 1.15rem; font-size: .95rem; }
+.btn:hover { color: var(--btn-fg); background: color-mix(in srgb, var(--btn-bg) 88%, var(--ink)); }
+@media (prefers-reduced-motion: no-preference) {
+  .btn { transition: transform .12s, box-shadow .12s, background-color .12s; }
+  .btn:hover { transform: translate(calc(var(--bo) / 2), calc(var(--bo) / 2)); box-shadow: calc(var(--bo) / 2) calc(var(--bo) / 2) 0 var(--shadow); }
+  .btn:active { transform: translate(var(--bo), var(--bo)); box-shadow: 0 0 0 var(--shadow); }
+}
+
+/* Letterspaced eyebrows. */
+.eyebrow, .label { margin: 0 0 .9rem; font: 700 .78rem/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+.eyebrow { text-align: center; }
+.badge {
+  display: inline-flex; align-items: center; gap: .6rem; max-width: 100%; margin: 0 0 1.5rem; padding: .35rem 1rem;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 1.25rem;
+  font: 700 .74rem/1.4 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+}
+.dot { flex: none; width: .8rem; height: .8rem; border-radius: 50%; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .dot { animation: rec 1.6s ease-in-out infinite; }
+  @keyframes rec { 50% { opacity: .25; } }
+}
+
+/* Hero: centered title, handwritten tagline, then the product mockup. */
+.tagline {
+  width: fit-content; max-width: 100%; margin: .1rem auto 1.5rem; transform: rotate(-1deg); text-wrap: balance;
+  font: 700 clamp(1.9rem, 5.5vw, 3rem)/1.1 var(--hand); color: var(--accent-big);
+}
+.lede { max-width: 40rem; margin: 0 auto; font-size: 1.15rem; color: var(--muted); }
+.lede strong { color: var(--ink); }
+
+.mock { display: grid; max-width: 56rem; margin: clamp(2.5rem, 6vw, 4rem) auto 0; overflow: hidden; text-align: left; }
+.session, .brief { min-width: 0; padding: clamp(1.1rem, 3.5vw, 1.75rem); }
+.session { background: var(--bg); border-bottom: 2px solid var(--line); }
+@media (min-width: 46rem) {
+  .mock { grid-template-columns: 5fr 6fr; }
+  .session { border-bottom: 0; border-right: 2px solid var(--line); }
+}
+.rec { display: flex; align-items: flex-start; gap: .6rem; margin-bottom: 1rem; font-size: .9rem; color: var(--muted); }
+.rec .dot { margin-top: .4em; }
+/* Decorative per-speaker tracks. Each lane is three speech bursts (the first three background layers, sized by
+   --w1..--w3 and placed along the lane with background-position) over a thin rule that stands for the silence
+   (the fourth layer). Different positions per lane show that the speakers take turns. */
+.lanes { display: grid; gap: .6rem; margin-bottom: .75rem; }
+.lanes i {
+  display: block; height: .7rem;
+  --w1: 16%; --w2: 10%; --w3: 22%;
+  background-repeat: no-repeat; background-size: var(--w1) 100%, var(--w2) 100%, var(--w3) 100%, 100% 2px;
+}
+.lanes .l1 { background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--rule), var(--rule)); background-position: 4% 0, 40% 0, 72% 0, 0 50%; }
+.lanes .l2 { background-image: linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--ink), var(--ink)), linear-gradient(var(--rule), var(--rule)); background-position: 24% 0, 58% 0, 2% 0, 0 50%; --w1: 12%; --w2: 8%; --w3: 6%; }
+.lanes .l3 { background-image: linear-gradient(var(--muted), var(--muted)), linear-gradient(var(--muted), var(--muted)), linear-gradient(var(--muted), var(--muted)), linear-gradient(var(--rule), var(--rule)); background-position: 46% 0, 82% 0, 14% 0, 0 50%; --w1: 14%; --w2: 10%; --w3: 8%; }
+.lane-note { margin-bottom: 1.25rem; font-size: .85rem; color: var(--muted); }
+.cmds { display: grid; grid-template-columns: auto 1fr; gap: .6rem 1rem; margin: 0; padding-top: 1rem; border-top: 2px dashed var(--rule); font-size: .95rem; }
+.cmds dt { font-weight: 700; }
+.cmds dd { margin: 0; }
+.cmds code { color: var(--accent-ink); background: none; padding: 0; font-weight: 700; }
+@media (max-width: 26rem) { .cmds { grid-template-columns: 1fr; gap: .1rem; } .cmds dd { margin-bottom: .6rem; } }
+
+/* The rendered summary inside the mockup. */
+.brief-title { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem 1rem; margin: 0 0 .15rem; font: 800 1.5rem/1.15 var(--display); letter-spacing: -.01em; }
+.pill, .tag { padding: .1rem .7rem; font: 700 .7rem/1.6 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border: 2px solid var(--line); border-radius: 999px; }
+.pill { background: var(--surface); }
+.brief-date { margin: 0 0 1.25rem; font: .85rem var(--mono); color: var(--muted); }
+.brief .label { margin-bottom: .35rem; }
+.brief p:not(.brief-title, .brief-date, .label) { margin-bottom: 1.25rem; }
+.chips { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+.chips li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .3rem .75rem;
+  padding: .6rem .85rem; background: var(--chip); border: 2px solid var(--line); border-radius: .8rem; font-size: .95rem; font-weight: 600;
+}
+.chips b { padding: 0 .65rem; background: var(--surface); border: 2px solid var(--line); border-radius: 999px; font: 700 .72rem/1.7 var(--sans); letter-spacing: .06em; text-transform: uppercase; }
+
+/* How it works. */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.75rem; margin: 2.5rem 0 3.5rem; padding: 0; list-style: none; }
+.steps li { padding: 1.5rem; }
+/* Decorative "01 /03" numeral; the <ol> already conveys the order, so the markup hides it from assistive tech. */
+.stepno { display: flex; align-items: baseline; gap: .4rem; margin-bottom: .75rem; }
+.stepno b { font: 800 clamp(3rem, 6vw, 3.75rem)/1 var(--display); letter-spacing: -.03em; font-variant-numeric: lining-nums; color: var(--accent-big); }
+.stepno span { font: 700 1rem var(--display); color: var(--muted); }
+.steps p { margin: 0; color: var(--muted); }
+.out { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1.5rem 3rem; align-items: center; max-width: 52rem; margin-inline: auto; }
+.out pre { margin: 0; }
+.out dl { margin: 0; }
+.out dt { margin-top: .25rem; font-weight: 700; }
+.out dd { margin: 0 0 .75rem; color: var(--muted); }
+
+/* Dark code blocks get a coral shadow: an ink shadow would melt into the ink block. */
+pre { margin: 0 0 1.5rem; padding: 1.1rem 1.35rem; overflow-x: auto; line-height: 1.7; background: var(--term-bg); color: var(--term-fg); box-shadow: var(--off) var(--off) 0 var(--accent); }
+
+/* Sample output: two document cards, each with a file-name tab. */
+.docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 2.5rem; margin: 2.5rem 0 2rem; align-items: start; }
+.doc { margin: 0; min-width: 0; }
+.doc figcaption { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .25rem 1rem; margin: 0; }
+.tab {
+  position: relative; z-index: 1; margin-bottom: -2px; padding: .4rem 1rem; font: 700 .85rem/1.4 var(--mono); color: var(--ink);
+  background: var(--surface); border: 2px solid var(--line); border-bottom-color: var(--surface); border-radius: .75rem .75rem 0 0;
+}
+.tag { margin-bottom: .45rem; }
+.md {
+  margin: 0; padding: 1.15rem 1.35rem; font-size: .85rem; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--surface); color: var(--ink); border-top-left-radius: 0; box-shadow: var(--off) var(--off) 0 var(--shadow);
+}
+.md .h { font-weight: 700; }
+.md .d { color: var(--muted); }
+.md .k { color: var(--accent-ink); font-weight: 700; }
+.docnote { margin: 1.25rem 0 0; font-size: .88rem; color: var(--muted); }
+.note { max-width: 42rem; margin: 0 auto 1.5rem; text-align: center; color: var(--muted); }
+
+/* Privacy headline stat. */
+.stat {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1.25rem 3rem; align-items: center;
+  margin: 2.5rem 0 0; padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+.stat-fig { margin: 0; }
+.stat-num { display: block; font: 800 clamp(3.4rem, 11vw, 6.25rem)/1.05 var(--display); letter-spacing: -.04em; color: var(--accent-big); }
+.stat-unit { display: block; margin-top: .35rem; font: 700 clamp(1.3rem, 3.2vw, 1.8rem)/1.2 var(--display); letter-spacing: -.01em; }
+.stat-fine { margin: 0; color: var(--muted); }
+.stat-fine strong { color: var(--ink); }
+
+/* Cards (privacy checklist, platforms). */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1.75rem; margin: 2.5rem 0 2rem; padding: 0; list-style: none; }
+.cards li { position: relative; padding: 1.5rem; }
+.cards h3 { margin-bottom: .4em; }
+.cards p { margin: 0; color: var(--muted); font-size: .98rem; }
+/* Check badge: a coral disc (::before) with a CSS-drawn tick (::after) positioned over its centre. */
+.checks li::before {
+  content: ""; display: block; width: 1.75rem; height: 1.75rem; margin-bottom: .9rem;
+  background: var(--accent); border: 2px solid var(--line); border-radius: 50%;
+}
+.checks li::after {
+  content: ""; position: absolute; top: 1.85rem; left: 2.1rem; width: .5rem; height: .85rem;
+  border: solid var(--on-accent); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+
+.consent { max-width: 48rem; margin: 2.5rem auto 0; padding: 1.25rem 1.5rem; background: var(--chip); }
+.consent h3 { margin-bottom: .25em; }
+.consent p { margin: 0; }
+.panel { max-width: 48rem; margin: 2.5rem auto 0; padding: 1.5rem 1.75rem; }
+.know h3 { margin-bottom: .6em; }
+.plain { margin: 0; padding-left: 1.2rem; color: var(--muted); }
+.plain li { margin-bottom: .5rem; }
+.plain li:last-child { margin-bottom: 0; }
+.plain li::marker { color: var(--accent-ink); }
+
+/* Setup call to action. */
+.setup { max-width: 44rem; margin-inline: auto; text-align: center; }
+.setup pre { margin: 2rem 0 1.5rem; text-align: left; }
+
+/* FAQ accordion: native <details> inside one card, no script. */
+.faq { max-width: 48rem; margin: 2.5rem auto 0; }
+.faq details + details { border-top: 2px solid var(--line); }
+.faq summary { position: relative; display: block; padding: 1.1rem 3.5rem 1.1rem 1.5rem; font-weight: 700; line-height: 1.4; cursor: pointer; list-style: none; }
+.faq details:first-child > summary { border-radius: 14px 14px 0 0; }
+.faq details:last-child:not([open]) > summary { border-radius: 0 0 14px 14px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--accent-ink); }
+.faq summary:focus-visible { outline-offset: -3px; }
+/* Custom marker: a plus whose vertical bar turns into a minus when open. */
+.faq summary::before, .faq summary::after {
+  content: ""; position: absolute; right: 1.4rem; top: 50%; width: 1rem; height: 3px; margin-top: -1.5px;
+  background: var(--accent-ink); border-radius: 2px;
+}
+.faq summary::after { transform: rotate(90deg); }
+.faq details[open] > summary::after { transform: rotate(0deg); }
+@media (prefers-reduced-motion: no-preference) { .faq summary::after { transition: transform .2s ease; } }
+.faq .answer { padding: 0 1.5rem 1.25rem; color: var(--muted); }
+.faq .answer p { margin: 0 0 .7em; }
+.faq .answer strong { color: var(--ink); }
+.faq .answer .more { margin: 0; font-size: .9rem; }
+
+/* Final call to action: a coral card with dark ink and cream buttons. */
+.finale { padding: clamp(2rem, 6vw, 3.5rem); background: var(--accent); border-color: var(--dark); color: var(--dark); text-align: center; }
+.finale h2 { max-width: 16em; }
+.finale p { max-width: 36rem; margin: 0 auto; }
+.finale .actions { margin-top: 1.75rem; }
+.finale :focus-visible { outline-color: var(--dark); }
+.finale .btn { --line: var(--dark); --shadow: var(--dark); --btn-bg: var(--surface); --btn-fg: var(--dark); }
+.finale .btn.primary { --btn-bg: var(--dark); --btn-fg: var(--bg); }
+
+.foot { padding-block: 1.75rem; background: var(--surface); border-top: 2px solid var(--line); color: var(--muted); font-size: .9rem; text-align: center; }
+.foot p { margin-block: 0; }

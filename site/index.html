@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>discord-scribe: un bot privado que toma notas en tus canales de voz</title>
+  <meta name="description" content="Un bot autoalojado y privado que toma notas en Discord. Graba a cada participante por separado, transcribe en local con whisper.cpp y entrega la transcripción y el resumen en Markdown. Sin servicio alojado.">
+  <meta name="color-scheme" content="light">
+  <!-- Keep in sync with the --bg token in styles.css (a meta tag cannot read CSS variables). -->
+  <meta name="theme-color" content="#f3ecdc">
+  <link rel="canonical" href="https://fishb0ness.github.io/discord-scribe/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:title" content="discord-scribe: un bot privado que toma notas en tus canales de voz">
+  <meta property="og:description" content="Autoalojado. Graba a cada participante por separado, transcribe en local con whisper.cpp y resume, si quieres, con tu propia CLI de Claude Code.">
+  <meta property="og:url" content="https://fishb0ness.github.io/discord-scribe/">
+  <meta property="og:image" content="https://fishb0ness.github.io/discord-scribe/logo-1024.png">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="1024">
+  <meta property="og:image:alt" content="El logotipo de discord-scribe: una burbuja de diálogo coral con una onda de sonido y dos líneas de texto.">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preload" href="fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/caveat-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+
+  <header class="top">
+    <div class="wrap bar">
+      <a class="brand" href="./"><img src="logo.svg" alt="" width="32" height="32">discord-scribe</a>
+      <nav aria-label="Secciones de la página">
+        <a href="#flow">Cómo funciona</a>
+        <a href="#privacy">Privacidad</a>
+        <a href="#platforms">Plataformas</a>
+        <a href="#setup">Instalación</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <a class="btn primary sm" href="https://github.com/Fishb0ness/discord-scribe">GitHub</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="wrap hero" aria-labelledby="top-title">
+      <p class="badge"><span class="dot" aria-hidden="true"></span>Autoalojado &middot; Licencia MIT &middot; Node.js 22+</p>
+      <h1 id="top-title">Un bot privado que <span class="nb">toma notas</span> en tu canal de voz de Discord.</h1>
+      <p class="tagline">Escribe /grabar. Yo tomo las notas.</p>
+      <p class="lede">discord-scribe graba a cada participante por separado, transcribe <strong>en local</strong> con
+        <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a> y entrega una transcripción y un resumen en
+        Markdown. Tú ejecutas tu propia aplicación de Discord en tu propio equipo. No hay ningún servicio alojado y nadie
+        más puede invitar a tu bot.</p>
+      <p class="actions">
+        <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe">Consíguelo en GitHub</a>
+        <a class="btn" href="https://github.com/Fishb0ness/discord-scribe#instalación">Lee la guía de instalación</a>
+      </p>
+
+      <div class="mock">
+        <div class="session">
+          <p class="rec"><span class="dot" aria-hidden="true"></span>
+            <span>Mientras graba, el bot se renombra a <code>[GRABANDO] ...</code></span></p>
+          <div class="lanes" aria-hidden="true"><i class="l1"></i><i class="l2"></i><i class="l3"></i></div>
+          <p class="lane-note">Una pista por participante; cada una es sobre todo silencio. Whisper lee cada pista en
+            local y las intervenciones se fusionan en orden cronológico.</p>
+          <dl class="cmds">
+            <dt><code>/grabar</code></dt>
+            <dd>El bot entra en tu canal de voz y anuncia la grabación.</dd>
+            <dt><code>/parar</code></dt>
+            <dd>Transcribe, resume y publica el resultado en el canal de texto donde usaste <code>/grabar</code>.</dd>
+          </dl>
+        </div>
+        <div class="brief">
+          <p class="brief-title">Resumen: general <span class="pill">Ejemplo</span></p>
+          <p class="brief-date">2026-10-04 17:05</p>
+          <p class="label">Resumen</p>
+          <p>El equipo ha acordado celebrar la presentación del trimestre el jueves 15 y ha repartido las tareas.</p>
+          <p class="label">Tareas pendientes</p>
+          <ul class="chips" role="list">
+            <li><span>Preparar el guion</span><b>Ana</b></li>
+            <li><span>Recopilar las cifras</span><b>Luis, el lunes</b></li>
+            <li><span>Reservar la sala</span><b>Marta</b></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap" id="flow" aria-labelledby="flow-title">
+      <p class="eyebrow">Cómo funciona</p>
+      <h2 id="flow-title">De <code>/grabar</code> a Markdown</h2>
+      <ol class="steps" role="list">
+        <li><div class="stepno" aria-hidden="true"><b>01</b><span>/03</span></div>
+          <h3>Grabar</h3>
+          <p>El bot entra en tu canal de voz, anuncia la grabación en el canal de texto y escribe un archivo WAV por
+            participante. La grabación también se detiene sola cuando el canal se queda vacío.</p></li>
+        <li><div class="stepno" aria-hidden="true"><b>02</b><span>/03</span></div>
+          <h3>Transcribir</h3>
+          <p>Con <code>/parar</code>, cada pista pasa por <code>whisper-cli</code> en tu equipo. Las intervenciones se
+            fusionan en una única transcripción ordenada cronológicamente y los archivos WAV se borran en cuanto se
+            transcriben.</p></li>
+        <li><div class="stepno" aria-hidden="true"><b>03</b><span>/03</span></div>
+          <h3>Resumir</h3>
+          <p>De forma opcional, <code>claude -p</code> redacta el resumen. Se publica donde usaste <code>/grabar</code>,
+            con <code>transcript.md</code> adjunto. Si el resumen falla, la transcripción se guarda y se publica
+            igualmente.</p></li>
+      </ol>
+      <div class="out">
+        <pre tabindex="0"><code>recordings/2026-10-04_1705-general/
+  transcript.md
+  summary.md</code></pre>
+        <dl>
+          <dt><code>transcript.md</code></dt>
+          <dd><code>[mm:ss] **Nombre**: texto</code>, en orden cronológico, con las intervenciones consecutivas de una
+            misma persona fusionadas.</dd>
+          <dt><code>summary.md</code></dt>
+          <dd>Resumen, decisiones y tareas pendientes con su responsable.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="wrap" id="sample" aria-labelledby="sample-title">
+      <p class="eyebrow">Ejemplo de salida</p>
+      <h2 id="sample-title">Lo que te entrega el bot.</h2>
+      <p class="note">Tras <code>/parar</code>, la carpeta de la grabación contiene dos archivos Markdown. Aquí tienes un
+        ejemplo de cada uno, con participantes y una reunión inventados, con el formato que escribe el bot.</p>
+      <div class="docs">
+        <figure class="doc">
+          <figcaption><span class="tab">transcript.md</span><span class="tag">Ejemplo</span></figcaption>
+<pre class="md"><code><span class="h"># Transcripción: general</span>
+
+<span class="d">_2026-10-04 17:05_</span>
+
+<span class="k">[00:04]</span> **Ana**: Vale, empezamos. Hoy toca cerrar la fecha de la presentación del trimestre.
+
+<span class="k">[00:15]</span> **Luis**: Yo propondría el jueves 15, así tenemos una semana para preparar las diapositivas.
+
+<span class="k">[00:27]</span> **Marta**: Me va bien el jueves. Puedo reservar la sala si alguien prepara el guion.
+
+<span class="k">[00:41]</span> **Ana**: El guion lo preparo yo. Luis, ¿puedes recopilar las cifras?
+
+<span class="k">[00:52]</span> **Luis**: Sí, las tengo el lunes.</code></pre>
+          <p class="docnote">Un bloque por intervención, en orden cronológico, con las intervenciones consecutivas de una
+            misma persona fusionadas. Las marcas de tiempo se escriben <code>mm:ss</code>, o <code>h:mm:ss</code> a partir
+            de la primera hora.</p>
+        </figure>
+
+        <figure class="doc">
+          <figcaption><span class="tab">summary.md</span><span class="tag">Ejemplo</span></figcaption>
+<pre class="md"><code><span class="h"># Resumen: general</span>
+
+<span class="d">_2026-10-04 17:05_</span>
+
+<span class="h">## Resumen</span>
+
+El equipo ha acordado celebrar la presentación del trimestre el jueves 15 y ha repartido las tareas: sala, guion y cifras.
+
+<span class="h">## Decisiones</span>
+
+- La presentación será el jueves 15.
+
+<span class="h">## Tareas pendientes</span>
+
+- Preparar el guion: Ana.
+- Recopilar las cifras: Luis, el lunes.
+- Reservar la sala: Marta.</code></pre>
+          <p class="docnote">El bot añade el título y la fecha. Claude escribe el resto, en las tres secciones que le pide
+            su prompt: un resumen breve, las decisiones y las tareas pendientes, con responsable y fecha cuando se
+            mencionan.</p>
+        </figure>
+      </div>
+      <p class="note">Los mensajes del bot en el chat y el resumen salen siempre en español, porque el prompt del resumen
+        está fijado en ese idioma. <code>WHISPER_LANGUAGE</code> y <code>WHISPER_PROMPT</code> solo cambian la
+        transcripción: el idioma hablado y el prompt inicial para la puntuación y el vocabulario.</p>
+    </section>
+
+    <section class="wrap" id="privacy" aria-labelledby="privacy-title">
+      <p class="eyebrow">Privacidad</p>
+      <h2 id="privacy-title">Pensado para que todo se quede de tu lado.</h2>
+      <div class="stat">
+        <p class="stat-fig"><span class="stat-num">0 bytes</span>
+          <span class="stat-unit">de audio salen de tu equipo.</span></p>
+        <p class="stat-fine">Whisper se ejecuta en local y los archivos de audio se borran en cuanto se transcriben. Lo
+          único que puede llegar a Anthropic es <strong>texto de la transcripción, no audio</strong>, y solo para el
+          resumen opcional, a través de la CLI <code>claude</code> y tu propio inicio de sesión de Claude. Con
+          <code>SUMMARY_ENABLED=false</code>, <code>claude</code> no se ejecuta nunca.</p>
+      </div>
+      <ul class="cards checks" role="list">
+        <li><h3>El audio nunca sale de tu equipo</h3>
+          <p>El audio de cada usuario va a una carpeta temporal, whisper.cpp lo transcribe en local y se borra en cuanto
+            se transcribe.</p></li>
+        <li><h3>El resumen es opcional</h3>
+          <p>Solo el texto de la transcripción, no el audio, llega a Anthropic, a través de la CLI <code>claude</code> y
+            tu propio inicio de sesión de Claude. Con <code>SUMMARY_ENABLED=false</code>, <code>claude</code> no se
+            ejecuta nunca.</p></li>
+        <li><h3>Solo tus servidores</h3>
+          <p><code>ALLOWED_GUILD_IDS</code> es obligatorio. El bot ignora las interacciones de cualquier otro sitio,
+            mensajes directos incluidos, y abandona cualquier otro servidor al que lo añadan.</p></li>
+        <li><h3>Solo quien tú permitas</h3>
+          <p>Restringe <code>/grabar</code> con los permisos de comandos de Discord. <code>/parar</code> solo funciona
+            para quien esté en el canal de voz que se está grabando.</p></li>
+        <li><h3>Nadie más puede invitarlo</h3>
+          <p>Desactiva <strong>Public Bot</strong> en el Developer Portal y solo tú podrás añadir el bot a un
+            servidor.</p></li>
+        <li><h3>Tu token se queda en local</h3>
+          <p>Solo vive en tu <code>.env</code>, que git ignora. Un hook de pre-commit y un análisis en CI impiden
+            publicar secretos.</p></li>
+      </ul>
+      <aside class="consent" aria-labelledby="consent-title">
+        <h3 id="consent-title">Avisa a las personas a las que grabas.</h3>
+        <p>Grabar voces tiene consecuencias legales (RGPD y leyes similares). El bot anuncia la grabación y se renombra
+          durante toda la sesión, pero obtener el consentimiento es responsabilidad tuya.</p>
+      </aside>
+    </section>
+
+    <section class="wrap" id="platforms" aria-labelledby="platforms-title">
+      <p class="eyebrow">Plataformas</p>
+      <h2 id="platforms-title">Funciona en macOS, Linux y Windows.</h2>
+      <ul class="cards" role="list">
+        <li><h3>macOS</h3>
+          <p><code>brew install whisper-cpp</code> y, después, ejecútalo como LaunchAgent de launchd.</p></li>
+        <li><h3>Linux</h3>
+          <p>Compila whisper.cpp desde el código fuente y ejecútalo como unidad de usuario de systemd.</p></li>
+        <li><h3>Windows</h3>
+          <p>Usa el zip de la release de whisper.cpp o compílalo, y ejecútalo como tarea programada al iniciar
+            sesión.</p></li>
+      </ul>
+      <p class="note">Todos los sistemas necesitan Node.js 22+ y git. La CLI de Claude Code solo hace falta mientras los
+        resúmenes estén activados. Los instaladores del servicio arrancan el bot al iniciar sesión y lo reinician si
+        falla.</p>
+      <div class="panel know">
+        <h3>Conviene saber</h3>
+        <ul class="plain">
+          <li>Los mensajes del bot en el chat y <code>summary.md</code> están siempre en español. Whisper transcribe en
+            español por defecto; <code>WHISPER_LANGUAGE</code> y <code>WHISPER_PROMPT</code> solo cambian la
+            transcripción.</li>
+          <li>La recepción de voz no es oficial en ninguna librería de Discord y puede romperse cuando Discord cambie su
+            protocolo de voz.</li>
+          <li>Una grabación por servidor a la vez; los trabajos de transcripción se ejecutan uno tras otro.</li>
+          <li>La CI cubre las pruebas y la comprobación de tipos en los tres sistemas, no una sesión real de Discord.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap" id="setup" aria-labelledby="setup-title">
+      <div class="setup">
+        <p class="eyebrow">Instalación</p>
+        <h2 id="setup-title">Clónalo, rellena <code>.env</code>, ejecútalo.</h2>
+        <pre tabindex="0"><code>git clone https://github.com/Fishb0ness/discord-scribe
+cd discord-scribe
+npm install
+npm run download-models   # large-v3 (unos 3 GB) + Silero VAD
+cp .env.example .env      # en Windows: copy .env.example .env
+npm start</code></pre>
+        <p>También tendrás que crear tu propia aplicación de Discord y añadir su token y el ID de tu servidor a
+          <code>.env</code>. El README explica cada paso.</p>
+        <p class="actions">
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#instalación">Abre la guía de instalación</a>
+          <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">Ver el código fuente</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="wrap" id="faq" aria-labelledby="faq-title">
+      <p class="eyebrow">Preguntas frecuentes</p>
+      <h2 id="faq-title">Respuestas rápidas.</h2>
+      <p class="note">Extraídas de las secciones de privacidad, solución de problemas y limitaciones conocidas del
+        README.</p>
+      <div class="faq">
+        <details>
+          <summary>¿Mi audio sale alguna vez de mi equipo?</summary>
+          <div class="answer">
+            <p>No. El audio de cada usuario se escribe en una carpeta temporal, whisper.cpp lo transcribe en local y se
+              borra en cuanto se transcribe. Solo el texto de la transcripción, no el audio, llega a Anthropic, y
+              únicamente para generar el resumen, a través de la CLI <code>claude</code> y tu propio inicio de sesión de
+              Claude. Con <code>SUMMARY_ENABLED=false</code>, <code>claude</code> no se ejecuta nunca.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacidad-y-acceso">Más en el README: Privacidad y acceso</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>¿Puede alguien más añadir el bot a su servidor?</summary>
+          <div class="answer">
+            <p>No. Desactiva <strong>Public Bot</strong> en el Developer Portal y solo tú podrás añadirlo.
+              <code>ALLOWED_GUILD_IDS</code> es obligatorio: el bot ignora las interacciones de otros servidores
+              (mensajes directos incluidos) y abandona cualquier otro servidor al que lo añadan.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacidad-y-acceso">Más en el README: Privacidad y acceso</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>El bot ha abandonado mi servidor por sí solo. ¿Por qué?</summary>
+          <div class="answer">
+            <p>Abandona todos los servidores cuyo ID no esté en <code>ALLOWED_GUILD_IDS</code> (el log dice
+              <code>Leaving guild</code>). La causa habitual es una errata o un ID equivocado, por ejemplo al migrar desde
+              el antiguo <code>DISCORD_GUILD_ID</code>. Activa el Modo desarrollador en Discord, haz clic derecho en el
+              servidor, elige <strong>Copiar ID del servidor</strong>, pégalo en <code>.env</code>, reinicia el bot y
+              vuelve a invitarlo.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Los comandos de barra no aparecen.</summary>
+          <div class="answer">
+            <p>Se registran por servidor permitido al arrancar. Comprueba que el log diga
+              <code>Registered slash commands</code>, que el bot se añadiera con el scope
+              <code>applications.commands</code> y que el ID de servidor de <code>ALLOWED_GUILD_IDS</code> sea
+              correcto.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>La transcripción sale vacía o llena de &laquo;Gracias.&raquo;</summary>
+          <div class="answer">
+            <p>Falta el modelo VAD (el bot lo avisa al arrancar). Ejecuta <code>npm run download-models</code>. Sin él,
+              Whisper se inventa texto en los silencios, y la pista de cada participante es sobre todo silencio.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Tengo la transcripción, pero no el resumen.</summary>
+          <div class="answer">
+            <p>Comprueba que <code>claude -p "hi"</code> funciona con el usuario que ejecuta el bot (los servicios se
+              ejecutan como tú, pero con un <code>PATH</code> más reducido) y que <code>SUMMARY_ENABLED</code> no es
+              <code>false</code>. Si el resumen falla, la transcripción se guarda y se publica igualmente, con un
+              aviso.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>¿Hay límites con las grabaciones simultáneas?</summary>
+          <div class="answer">
+            <p>Una grabación por servidor a la vez, y los trabajos de transcripción se ejecutan uno tras otro. Si el bot
+              se cierra de forma abrupta a mitad de una grabación, los WAV de cada usuario se quedan en
+              <code>recordings/.work/</code> y no se procesan automáticamente.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#limitaciones-conocidas">Más en el README: Limitaciones conocidas</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>¿Puede una actualización de Discord romperlo?</summary>
+          <div class="answer">
+            <p>Sí. La recepción de voz no es oficial en ninguna librería de Discord y puede romperse cuando Discord cambie
+              su protocolo de voz (DAVE); si ocurre, actualiza Dysnomia y Davey. La CI cubre las pruebas y la comprobación
+              de tipos en macOS, Linux y Windows, no una sesión real de Discord.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#limitaciones-conocidas">Más en el README: Limitaciones conocidas</a></p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="wrap" aria-labelledby="finale-title">
+      <div class="finale">
+        <h2 id="finale-title">Ejecuta tu propio escriba.</h2>
+        <p>Tu aplicación de Discord, tu equipo, tus transcripciones. Licencia MIT, sin ningún servicio alojado de por
+          medio.</p>
+        <p class="actions">
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#instalación">Sigue la guía de instalación</a>
+          <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">Explora el repositorio</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p class="wrap">discord-scribe &middot; <a href="https://github.com/Fishb0ness/discord-scribe/blob/main/LICENSE">Licencia MIT</a>
+      &middot; &copy; 2026 Fishb0ness</p>
+  </footer>
+</body>
+</html>
