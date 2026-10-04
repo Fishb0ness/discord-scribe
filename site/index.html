@@ -53,7 +53,7 @@
         más puede invitar a tu bot.</p>
       <p class="actions">
         <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe">Consíguelo en GitHub</a>
-        <a class="btn" href="https://github.com/Fishb0ness/discord-scribe#setup">Lee la guía de instalación</a>
+        <a class="btn" href="https://github.com/Fishb0ness/discord-scribe#instalación">Lee la guía de instalación</a>
       </p>
 
       <div class="mock">
@@ -254,7 +254,7 @@ npm start</code></pre>
         <p>También tendrás que crear tu propia aplicación de Discord y añadir su token y el ID de tu servidor a
           <code>.env</code>. El README explica cada paso.</p>
         <p class="actions">
-          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#setup">Abre la guía de instalación</a>
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#instalación">Abre la guía de instalación</a>
           <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">Ver el código fuente</a>
         </p>
       </div>
@@ -273,7 +273,7 @@ npm start</code></pre>
               borra en cuanto se transcribe. Solo el texto de la transcripción, no el audio, llega a Anthropic, y
               únicamente para generar el resumen, a través de la CLI <code>claude</code> y tu propio inicio de sesión de
               Claude. Con <code>SUMMARY_ENABLED=false</code>, <code>claude</code> no se ejecuta nunca.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacy-and-access">Más en el README: Privacidad y acceso</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacidad-y-acceso">Más en el README: Privacidad y acceso</a></p>
           </div>
         </details>
         <details>
@@ -282,7 +282,7 @@ npm start</code></pre>
             <p>No. Desactiva <strong>Public Bot</strong> en el Developer Portal y solo tú podrás añadirlo.
               <code>ALLOWED_GUILD_IDS</code> es obligatorio: el bot ignora las interacciones de otros servidores
               (mensajes directos incluidos) y abandona cualquier otro servidor al que lo añadan.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacy-and-access">Más en el README: Privacidad y acceso</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacidad-y-acceso">Más en el README: Privacidad y acceso</a></p>
           </div>
         </details>
         <details>
@@ -293,7 +293,7 @@ npm start</code></pre>
               el antiguo <code>DISCORD_GUILD_ID</code>. Activa el Modo desarrollador en Discord, haz clic derecho en el
               servidor, elige <strong>Copiar ID del servidor</strong>, pégalo en <code>.env</code>, reinicia el bot y
               vuelve a invitarlo.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">Más en el README: Solución de problemas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
           </div>
         </details>
         <details>
@@ -303,7 +303,7 @@ npm start</code></pre>
               <code>Registered slash commands</code>, que el bot se añadiera con el scope
               <code>applications.commands</code> y que el ID de servidor de <code>ALLOWED_GUILD_IDS</code> sea
               correcto.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">Más en el README: Solución de problemas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
           </div>
         </details>
         <details>
@@ -311,7 +311,7 @@ npm start</code></pre>
           <div class="answer">
             <p>Falta el modelo VAD (el bot lo avisa al arrancar). Ejecuta <code>npm run download-models</code>. Sin él,
               Whisper se inventa texto en los silencios, y la pista de cada participante es sobre todo silencio.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">Más en el README: Solución de problemas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
           </div>
         </details>
         <details>
@@ -321,7 +321,7 @@ npm start</code></pre>
               ejecutan como tú, pero con un <code>PATH</code> más reducido) y que <code>SUMMARY_ENABLED</code> no es
               <code>false</code>. Si el resumen falla, la transcripción se guarda y se publica igualmente, con un
               aviso.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">Más en el README: Solución de problemas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#solución-de-problemas">Más en el README: Solución de problemas</a></p>
           </div>
         </details>
         <details>
@@ -330,7 +330,7 @@ npm start</code></pre>
             <p>Una grabación por servidor a la vez, y los trabajos de transcripción se ejecutan uno tras otro. Si el bot
               se cierra de forma abrupta a mitad de una grabación, los WAV de cada usuario se quedan en
               <code>recordings/.work/</code> y no se procesan automáticamente.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#known-limitations">Más en el README: Limitaciones conocidas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#limitaciones-conocidas">Más en el README: Limitaciones conocidas</a></p>
           </div>
         </details>
         <details>
@@ -339,7 +339,7 @@ npm start</code></pre>
             <p>Sí. La recepción de voz no es oficial en ninguna librería de Discord y puede romperse cuando Discord cambie
               su protocolo de voz (DAVE); si ocurre, actualiza Dysnomia y Davey. La CI cubre las pruebas y la comprobación
               de tipos en macOS, Linux y Windows, no una sesión real de Discord.</p>
-            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#known-limitations">Más en el README: Limitaciones conocidas</a></p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#limitaciones-conocidas">Más en el README: Limitaciones conocidas</a></p>
           </div>
         </details>
       </div>
@@ -351,7 +351,7 @@ npm start</code></pre>
         <p>Tu aplicación de Discord, tu equipo, tus transcripciones. Licencia MIT, sin ningún servicio alojado de por
           medio.</p>
         <p class="actions">
-          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#setup">Sigue la guía de instalación</a>
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#instalación">Sigue la guía de instalación</a>
           <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">Explora el repositorio</a>
         </p>
       </div>
