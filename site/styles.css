@@ -1,4 +1,4 @@
-/* discord-scribe landing page. No external requests: the two fonts are self-hosted in fonts/ (SIL OFL, see fonts/OFL.txt). */
+/* discord-scribe landing page, light palette only. No external requests: the two fonts are self-hosted in fonts/ (SIL OFL, see fonts/OFL.txt). */
 
 /* Latin subsets of two variable fonts: Fraunces (display serif) and Caveat (handwritten accent). */
 @font-face {
@@ -29,31 +29,11 @@
   --dark: #1b1a17;
   --term-bg: #1b1a17;
   --term-fg: #efe9db;
-  --term-dim: #a39d8e;
-  --term-hi: #ff6a52;
   --display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
   --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --off: 6px;               /* offset of the hard shadow */
-}
-
-/* Dark: warm near-black ground, lighter cards, cream outlines and a muted taupe hard shadow that stays visible. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #181510;
-    --surface: #25211a;
-    --ink: #f2ebdc;
-    --muted: #bdb5a4;
-    --rule: #3a352a;
-    --line: #e6dec9;
-    --shadow: #6b6352;
-    --accent-ink: #ff7e68;
-    --accent-big: #ff6a52;
-    --chip: #482d23;
-    --term-bg: #0b0a08;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -288,14 +268,14 @@ pre { margin: 0 0 1.5rem; padding: 1.1rem 1.35rem; overflow-x: auto; line-height
 .faq .answer strong { color: var(--ink); }
 .faq .answer .more { margin: 0; font-size: .9rem; }
 
-/* Final call to action: a coral card; its ink and buttons stay dark in both themes. */
+/* Final call to action: a coral card with dark ink and cream buttons. */
 .finale { padding: clamp(2rem, 6vw, 3.5rem); background: var(--accent); border-color: var(--dark); color: var(--dark); text-align: center; }
 .finale h2 { max-width: 16em; }
 .finale p { max-width: 36rem; margin: 0 auto; }
 .finale .actions { margin-top: 1.75rem; }
 .finale :focus-visible { outline-color: var(--dark); }
-.finale .btn { --line: var(--dark); --shadow: var(--dark); --btn-bg: #fffaee; --btn-fg: var(--dark); }
-.finale .btn.primary { --btn-bg: var(--dark); --btn-fg: #f3ecdc; }
+.finale .btn { --line: var(--dark); --shadow: var(--dark); --btn-bg: var(--surface); --btn-fg: var(--dark); }
+.finale .btn.primary { --btn-bg: var(--dark); --btn-fg: var(--bg); }
 
 .foot { padding-block: 1.75rem; background: var(--surface); border-top: 2px solid var(--line); color: var(--muted); font-size: .9rem; text-align: center; }
 .foot p { margin-block: 0; }
