@@ -1,0 +1,34 @@
+{
+  "name": "discord-scribe",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Self-hosted Discord bot that records voice channels per speaker, transcribes locally with whisper.cpp and summarizes with Claude.",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "prepare": "node scripts/setup-hooks.mjs",
+    "download-models": "node scripts/download-models.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.10.0",
+    "@projectdysnomia/dysnomia": "github:projectdysnomia/dysnomia#00d8982d81d365c2cdb2ef5dac59af07977a65d7",
+    "@snazzah/davey": "^0.1.12",
+    "dotenv": "^18.0.4",
+    "sodium-native": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.2"
+  },
+  "optionalDependencies": {
+    "opusscript": "^0.1.1"
+  }
+}

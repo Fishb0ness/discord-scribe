@@ -1,0 +1,30 @@
+#!/bin/sh
+# Versioned pre-commit hook (enabled by `npm install` through the "prepare" script).
+# 1. Refuses to commit .env files (the .env.example template is fine).
+# 2. Scans the staged changes for secrets with gitleaks when it is installed.
+
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '(^|/)\.env($|\.)' | grep -Ev '(^|/)\.env\.example$')
+if [ -n "$blocked" ]; then
+  echo "pre-commit: refusing to commit environment files (they hold secrets):" >&2
+  echo "$blocked" | sed 's/^/  /' >&2
+  echo "Unstage them with: git restore --staged <file>" >&2
+  exit 1
+fi
+
+# SCRIBE_SKIP_GITLEAKS exists only so the hook's own tests are deterministic.
+if [ -n "$SCRIBE_SKIP_GITLEAKS" ]; then
+  exit 0
+fi
+
+if command -v gitleaks >/dev/null 2>&1; then
+  # gitleaks >= 8.19 uses `git --staged`; older releases use `protect --staged`.
+  if gitleaks git --help >/dev/null 2>&1; then
+    gitleaks git --staged --redact --no-banner --verbose || exit 1
+  else
+    gitleaks protect --staged --redact --verbose || exit 1
+  fi
+else
+  echo "pre-commit: WARNING gitleaks is not installed, skipping the secret scan." >&2
+  echo "  Install it: brew install gitleaks (macOS), https://github.com/gitleaks/gitleaks#installing (Linux/Windows)" >&2
+fi
+exit 0

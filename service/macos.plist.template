@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template: scripts/install-service-macos.sh replaces the {{PLACEHOLDERS}}. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>{{LABEL}}</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{NODE_BIN}}</string>
+    <string>{{PROJECT_DIR}}/node_modules/tsx/dist/cli.mjs</string>
+    <string>src/main.ts</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>{{PROJECT_DIR}}</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{PATH}}</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <!-- Wait at least 10 s between restarts so a crash loop does not hammer Discord's gateway. -->
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <!-- Give a stopping bot time to finalize WAV files, restore its nickname and finish queued transcriptions (the bot bounds that wait at 150 s). -->
+  <key>ExitTimeOut</key>
+  <integer>180</integer>
+
+  <key>StandardOutPath</key>
+  <string>{{PROJECT_DIR}}/logs/discord-scribe.log</string>
+  <key>StandardErrorPath</key>
+  <string>{{PROJECT_DIR}}/logs/discord-scribe.err.log</string>
+</dict>
+</plist>

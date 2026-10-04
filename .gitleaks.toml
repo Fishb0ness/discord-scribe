@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake snowflake ids used as test fixtures"
+paths = ['''^test/''']

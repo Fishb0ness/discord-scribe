@@ -1,0 +1,21 @@
+# Template: scripts/install-service-linux.sh replaces the {{PLACEHOLDERS}}.
+[Unit]
+Description=discord-scribe voice channel note-taker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{PROJECT_DIR}}
+Environment="PATH={{PATH}}"
+ExecStart="{{NODE_BIN}}" "{{PROJECT_DIR}}/node_modules/tsx/dist/cli.mjs" src/main.ts
+Restart=on-failure
+# Wait between restarts so a crash loop does not hammer Discord's gateway.
+RestartSec=10
+# Let a stopping bot finalize WAV files and finish queued transcriptions (the bot bounds that wait at 150 s).
+TimeoutStopSec=180
+StandardOutput=append:{{PROJECT_DIR}}/logs/discord-scribe.log
+StandardError=append:{{PROJECT_DIR}}/logs/discord-scribe.err.log
+
+[Install]
+WantedBy=default.target
