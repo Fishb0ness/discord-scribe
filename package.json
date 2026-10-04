@@ -10,6 +10,7 @@
     "prepare": "node scripts/setup-hooks.mjs",
     "download-models": "node scripts/download-models.mjs",
     "test": "vitest run",
+    "metrics": "node scripts/service-metrics.mjs summary",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

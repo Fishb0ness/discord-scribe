@@ -166,14 +166,34 @@ Los instaladores de macOS y Linux aceptan `--dry-run` (Windows: `-DryRun`) para 
 nada. Los instaladores fijan la ruta absoluta de `node` que encuentran en el momento de la instalación, así que vuelve
 a ejecutarlos después de actualizar Node con un gestor de versiones. Notas:
 
-- macOS: es un LaunchAgent, así que el usuario debe tener la sesión iniciada (activa el inicio de sesión automático
-  para arranques desatendidos).
+- macOS: por defecto es un LaunchAgent, así que solo corre mientras tu sesión gráfica está abierta (se detiene al
+  cerrarla). Para que sobreviva a los cierres de sesión y arranque con el equipo sin que nadie inicie sesión, usa el
+  modo `--system` (más abajo).
 - Linux: ejecuta `sudo loginctl enable-linger $USER` para que el servicio de usuario siga funcionando cuando cierres
   sesión.
 - Windows: la tarea se reinicia cada minuto si falla. Windows no tiene `SIGTERM`, así que detener la tarea mata el bot
   sin su cierre ordenado (una grabación sin terminar se queda en `recordings/.work/`).
 - Asegúrate de que `whisper-cli` y `claude` sean accesibles desde el `PATH` del servicio, o define `WHISPER_BIN` /
   `CLAUDE_BIN` con rutas completas en `.env`.
+
+#### macOS: servicio de sistema y métricas
+
+```sh
+scripts/install-service-macos.sh --system --metrics   # LaunchDaemon + muestreo de recursos
+scripts/uninstall-service-macos.sh --system           # desinstalar (quita también el muestreador)
+```
+
+- `--system` instala un LaunchDaemon en `/Library/LaunchDaemons`: sobrevive a los cierres de sesión y arranca con el
+  equipo. Ejecuta el script como tu usuario normal, nunca como root: el bot corre con tu usuario (así encuentra tu
+  configuración de `claude`) y el script llama a `sudo` solo para los pasos privilegiados. Al cambiar de modo elimina
+  la instancia del otro, para no ejecutar el bot dos veces.
+- Si el proyecto está en un disco externo, macOS no lo monta al arrancar hasta que alguien inicia sesión. Actívalo una
+  vez con `sudo defaults write /Library/Preferences/SystemConfiguration/autodiskmount AutomountDisksWithoutUserLogin
+  -bool true`. El servicio espera a que el volumen esté montado antes de arrancar.
+- `--metrics` añade un trabajo que cada 5 minutos anota en `logs/metrics.csv` la memoria y la CPU del bot, de
+  `whisper-cli` y de `claude`. Consulta el resumen (24 h y 7 días: media, pico y último valor) con `npm run metrics`;
+  usa `node scripts/service-metrics.mjs summary --window 90m` para otra ventana.
+- El instalador admite `--dry-run` con cualquier combinación de opciones para ver los plist sin instalar nada.
 
 ## Salida
 
