@@ -190,6 +190,10 @@ scripts/uninstall-service-macos.sh --system           # desinstalar (quita tambi
 - Si el proyecto está en un disco externo, macOS no lo monta al arrancar hasta que alguien inicia sesión. Actívalo una
   vez con `sudo defaults write /Library/Preferences/SystemConfiguration/autodiskmount AutomountDisksWithoutUserLogin
   -bool true`. El servicio espera a que el volumen esté montado antes de arrancar.
+- En modo `--system` los logs del servicio van a `~/Library/Logs/discord-scribe/`, en el disco de arranque: macOS no
+  deja que launchd los cree en un disco externo y el servicio no llegaría a arrancar. Si el proyecto está en un disco
+  externo y el bot no puede leerlo, concede a `node` acceso total al disco en Ajustes del Sistema → Privacidad y
+  seguridad.
 - `--metrics` añade un trabajo que cada 5 minutos anota en `logs/metrics.csv` la memoria y la CPU del bot, de
   `whisper-cli` y de `claude`. Consulta el resumen (24 h y 7 días: media, pico y último valor) con `npm run metrics`;
   usa `node scripts/service-metrics.mjs summary --window 90m` para otra ventana.

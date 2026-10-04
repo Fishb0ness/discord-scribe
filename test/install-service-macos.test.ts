@@ -34,6 +34,22 @@ describe('install-service-macos.sh --dry-run', () => {
     expect(out).not.toContain('CLAUDE_CONFIG_DIR');
   });
 
+  it('keeps LaunchAgent logs in the project', () => {
+    const out = dryRun(['--metrics'], { HOME: '/Users/example-user' });
+    expect(out).toContain('/logs/discord-scribe.log</string>');
+    expect(out).toContain('/logs/metrics.err.log</string>');
+    expect(out).not.toContain('/Library/Logs/');
+  });
+
+  // launchd opens the log files before exec, and the sandbox denies that on external volumes; a daemon logs to the boot disk.
+  it('writes LaunchDaemon logs under ~/Library/Logs with --system', () => {
+    const out = dryRun(['--system', '--metrics'], { HOME: '/Users/example-user' });
+    expect(out).toContain('<string>/Users/example-user/Library/Logs/discord-scribe/discord-scribe.log</string>');
+    expect(out).toContain('<string>/Users/example-user/Library/Logs/discord-scribe/discord-scribe.err.log</string>');
+    expect(out).toContain('<string>/Users/example-user/Library/Logs/discord-scribe/metrics.err.log</string>');
+    expect(out).not.toMatch(/\/logs\/(discord-scribe|metrics)[.\w]*\.log<\/string>/);
+  });
+
   it('renders a LaunchDaemon with --system', () => {
     const out = dryRun(['--system'], { CLAUDE_CONFIG_DIR: '/Users/example-user/.config/claude-alt' });
     expect(out).toContain('<key>UserName</key>');

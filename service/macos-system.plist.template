@@ -50,8 +50,8 @@
   <integer>180</integer>
 
   <key>StandardOutPath</key>
-  <string>{{PROJECT_DIR}}/logs/discord-scribe.log</string>
+  <string>{{LOG_DIR}}/discord-scribe.log</string>
   <key>StandardErrorPath</key>
-  <string>{{PROJECT_DIR}}/logs/discord-scribe.err.log</string>
+  <string>{{LOG_DIR}}/discord-scribe.err.log</string>
 </dict>
 </plist>

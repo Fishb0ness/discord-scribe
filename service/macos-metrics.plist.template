@@ -30,8 +30,8 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>{{PROJECT_DIR}}/logs/metrics.log</string>
+  <string>{{LOG_DIR}}/metrics.log</string>
   <key>StandardErrorPath</key>
-  <string>{{PROJECT_DIR}}/logs/metrics.err.log</string>
+  <string>{{LOG_DIR}}/metrics.err.log</string>
 </dict>
 </plist>

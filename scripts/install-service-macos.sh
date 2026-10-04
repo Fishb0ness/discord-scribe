@@ -32,10 +32,12 @@ AGENT_DIR="$HOME/Library/LaunchAgents"
 DAEMON_DIR="/Library/LaunchDaemons"
 AGENT_DOMAIN="gui/$(id -u)"
 
+# launchd opens a daemon's log files before exec, and the sandbox denies that on external volumes,
+# so a daemon logs to the boot disk; an agent keeps logging inside the project.
 if [ "$SYSTEM" -eq 1 ]; then
-  DOMAIN="system"; TARGET_DIR="$DAEMON_DIR"; SUDO="sudo"
+  DOMAIN="system"; TARGET_DIR="$DAEMON_DIR"; SUDO="sudo"; LOG_DIR="$HOME/Library/Logs/discord-scribe"
 else
-  DOMAIN="$AGENT_DOMAIN"; TARGET_DIR="$AGENT_DIR"; SUDO=""
+  DOMAIN="$AGENT_DOMAIN"; TARGET_DIR="$AGENT_DIR"; SUDO=""; LOG_DIR="$PROJECT_DIR/logs"
 fi
 
 NODE_BIN="$(command -v node || true)"
@@ -76,6 +78,7 @@ render() {
   text="${text//\{\{PATH\}\}/$SERVICE_PATH}"
   text="${text//\{\{USER_NAME\}\}/$USER_NAME}"
   text="${text//\{\{HOME_DIR\}\}/$HOME}"
+  text="${text//\{\{LOG_DIR\}\}/$LOG_DIR}"
   text="${text//\{\{CLAUDE_ENV\}\}/$CLAUDE_ENV}"
   text="${text//\{\{USER_KEYS\}\}/$USER_KEYS}"
   text="${text//\{\{ENV_EXTRA\}\}/$ENV_EXTRA}"
@@ -112,7 +115,7 @@ fi
 
 [ -f "$PROJECT_DIR/.env" ] || { echo "Missing $PROJECT_DIR/.env (copy .env.example and fill it in first)" >&2; exit 1; }
 [ -d "$PROJECT_DIR/node_modules" ] || { echo "Run 'npm install' first" >&2; exit 1; }
-mkdir -p "$PROJECT_DIR/logs" "$AGENT_DIR"
+mkdir -p "$PROJECT_DIR/logs" "$LOG_DIR" "$AGENT_DIR"
 
 # Removes the instance of the other mode (left behind it would run the bot twice).
 remove_other_mode() {
@@ -158,6 +161,6 @@ remove_other_mode
 install_job "$BOT_TEMPLATE" "$LABEL" 1
 [ "$METRICS" -eq 0 ] || install_job "macos-metrics.plist.template" "$METRICS_LABEL" 0
 
-echo "  logs:  $PROJECT_DIR/logs/discord-scribe.log (stdout), discord-scribe.err.log (stderr)"
+echo "  logs:  $LOG_DIR/discord-scribe.log (stdout), discord-scribe.err.log (stderr)"
 echo "  check: $SUDO launchctl print $DOMAIN/$LABEL | head -20"
 [ "$METRICS" -eq 0 ] || echo "  metrics: npm run metrics (samples in logs/metrics.csv)"
