@@ -25,7 +25,8 @@ const lint = (xml: string) => {
   return spawnSync('plutil', ['-lint', file], { encoding: 'utf8' });
 };
 
-describe('install-service-macos.sh --dry-run', () => {
+// macOS-only installer: on Windows the checkout turns the templates into CRLF, and the script never runs there.
+describe.skipIf(process.platform === 'win32')('install-service-macos.sh --dry-run', () => {
   it('keeps the default LaunchAgent unchanged', () => {
     const out = dryRun([]);
     expect(out).toContain('<key>KeepAlive</key>\n  <true/>');
