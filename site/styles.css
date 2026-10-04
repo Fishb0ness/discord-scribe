@@ -108,22 +108,54 @@ figcaption { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; }
 @media (max-width: 26rem) { .cmds { grid-template-columns: 1fr; gap: .1rem; } .cmds dd { margin-bottom: .6rem; } }
 
 /* How it works. */
-.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.5rem 2rem; margin: 2rem 0; padding: 0; list-style: none; counter-reset: step; }
-.steps li { counter-increment: step; }
-.steps li::before {
-  content: counter(step, decimal-leading-zero); content: counter(step, decimal-leading-zero) / "";
-  display: block; font: italic 2.6rem/1 var(--serif); color: var(--accent); margin-bottom: .5rem;
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: 1.5rem 2rem; margin: 2rem 0; padding: 0; list-style: none; }
+/* Decorative "01/03" badge; the <ol> already conveys the order, so the markup hides it from assistive tech. */
+.stepno { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+.stepno span {
+  flex: none; padding: .2rem .7rem; border: 1px solid var(--accent); border-radius: 999px;
+  font: 700 .8rem/1.4 var(--mono); letter-spacing: .06em; color: var(--accent);
 }
+.stepno::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
 .steps p { color: var(--muted); }
 .out { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem 2.5rem; align-items: start; }
 .out dl { margin: 0; }
 .out dt { font-weight: 700; margin-top: .25rem; }
 .out dd { margin: 0 0 .75rem; color: var(--muted); }
 
+/* Sample output: two document cards, each with a file-name tab. */
+.docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 1.75rem 2rem; margin: 2rem 0 1.5rem; align-items: start; }
+.doc { margin: 0; min-width: 0; }
+.doc figcaption { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .25rem 1rem; margin: 0; font-size: .85rem; }
+.tab {
+  position: relative; z-index: 1; margin-bottom: -1px; padding: .4rem .9rem; font: 600 .85rem/1.4 var(--mono); color: var(--ink);
+  background: var(--surface); border: 1px solid var(--rule); border-bottom-color: var(--surface); border-radius: .5rem .5rem 0 0;
+}
+.tag { padding-bottom: .4rem; font: 600 .72rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.md {
+  margin: 0; padding: 1.1rem 1.25rem; font-size: .85rem; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 0 .75rem .75rem .75rem; box-shadow: 0 .25rem 0 var(--rule);
+}
+.md .h { font-weight: 700; }
+.md .d { color: var(--muted); }
+.md .k { color: var(--accent); font-weight: 700; }
+.docnote { margin: 1rem 0 0; font-size: .88rem; color: var(--muted); }
+
 /* Cards (privacy, platforms). */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; margin: 2rem 0 1.5rem; padding: 0; list-style: none; }
 .cards li { padding: 1.25rem; background: var(--surface); border: 1px solid var(--rule); border-radius: .75rem; }
 .cards p { margin: 0; color: var(--muted); font-size: .98rem; }
+/* Privacy headline stat. */
+.stat {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem 3rem; align-items: center;
+  margin: 2rem 0 0; padding: clamp(1.25rem, 4vw, 2rem);
+  background: var(--surface); border: 1px solid var(--rule); border-radius: .9rem; box-shadow: 0 .25rem 0 var(--rule);
+}
+.stat-fig { margin: 0; font-family: var(--serif); }
+.stat-num { display: block; font: italic clamp(3.5rem, 12vw, 6.5rem)/1.15 var(--serif); letter-spacing: -.03em; color: var(--accent); }
+.stat-unit { display: block; margin-top: .3rem; font-size: clamp(1.3rem, 3.2vw, 1.8rem); line-height: 1.2; }
+.stat-fine { margin: 0; color: var(--muted); }
+.stat-fine strong { color: var(--ink); }
+
 .consent { padding: 1.25rem 1.5rem; border-left: .35rem solid var(--accent); background: var(--surface); border-radius: 0 .75rem .75rem 0; }
 .consent h3 { margin-bottom: .25em; }
 .consent p { margin: 0; }
@@ -134,6 +166,39 @@ figcaption { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; }
 /* Setup call to action. */
 .setup { max-width: 44rem; }
 .setup h2 { max-width: none; }
+
+/* FAQ accordion: native <details>, no script. */
+.faq { display: grid; gap: .75rem; max-width: 48rem; margin-top: 2rem; }
+.faq details { background: var(--surface); border: 1px solid var(--rule); border-radius: .75rem; }
+.faq summary {
+  position: relative; display: block; padding: 1rem 3.25rem 1rem 1.25rem; border-radius: .75rem;
+  font-weight: 600; line-height: 1.4; cursor: pointer; list-style: none;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--accent); }
+.faq summary:focus-visible { outline-offset: -3px; }
+/* Custom marker: a plus whose vertical bar turns into a minus when open. */
+.faq summary::before, .faq summary::after {
+  content: ""; position: absolute; right: 1.25rem; top: 50%; width: .95rem; height: 2px; margin-top: -1px;
+  background: var(--accent); border-radius: 1px;
+}
+.faq summary::after { transform: rotate(90deg); }
+.faq details[open] > summary::after { transform: rotate(0deg); }
+@media (prefers-reduced-motion: no-preference) { .faq summary::after { transition: transform .2s ease; } }
+.faq .answer { padding: 0 1.25rem 1.1rem; color: var(--muted); }
+.faq .answer p { margin: 0 0 .7em; }
+.faq .answer strong { color: var(--ink); }
+.faq .answer .more { margin: 0; font-size: .9rem; }
+
+/* Final call to action: a dark panel, deliberately shorter than the setup section above. */
+.finale { padding: clamp(1.75rem, 5vw, 3rem); background: var(--term-bg); color: var(--term-fg); border-radius: 1rem; }
+.finale h2 { max-width: none; }
+.finale p { max-width: 38rem; margin-bottom: 0; }
+.finale .actions { margin-top: 1.5rem; }
+.finale :focus-visible { outline-color: var(--term-fg); }
+.finale .btn { border-color: var(--term-fg); color: var(--term-fg); }
+.finale .btn.primary { background: var(--term-fg); color: var(--term-bg); }
+.finale .btn:hover { background: var(--accent); border-color: var(--accent); color: var(--surface); }
 
 .foot { padding-block: 2rem 3rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: .9rem; }
 .foot p { margin: 0; }

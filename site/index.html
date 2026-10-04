@@ -27,6 +27,7 @@
       <a href="#privacy">Privacy</a>
       <a href="#platforms">Platforms</a>
       <a href="#setup">Setup</a>
+      <a href="#faq">FAQ</a>
       <a href="https://github.com/Fishb0ness/discord-scribe">GitHub</a>
     </nav>
   </header>
@@ -63,14 +64,17 @@
 
     <section class="wrap" id="flow" aria-labelledby="flow-title">
       <h2 id="flow-title">From <code>/grabar</code> to Markdown</h2>
-      <ol class="steps">
-        <li><h3>Record</h3>
+      <ol class="steps" role="list">
+        <li><div class="stepno" aria-hidden="true"><span>01/03</span></div>
+          <h3>Record</h3>
           <p>The bot joins your voice channel, announces the recording in the text channel and writes one WAV file per
             speaker. The recording also stops by itself when the channel empties.</p></li>
-        <li><h3>Transcribe</h3>
+        <li><div class="stepno" aria-hidden="true"><span>02/03</span></div>
+          <h3>Transcribe</h3>
           <p>On <code>/parar</code> each track goes through <code>whisper-cli</code> on your machine. The turns are merged
             into one time-ordered transcript, and the WAV files are deleted once transcribed.</p></li>
-        <li><h3>Summarize</h3>
+        <li><div class="stepno" aria-hidden="true"><span>03/03</span></div>
+          <h3>Summarize</h3>
           <p>Optionally, <code>claude -p</code> writes the summary. It is posted where <code>/grabar</code> was used, with
             <code>transcript.md</code> attached. If the summary fails, the transcript is still saved and posted.</p></li>
       </ol>
@@ -87,8 +91,69 @@
       </div>
     </section>
 
+    <section class="wrap" id="sample" aria-labelledby="sample-title">
+      <h2 id="sample-title">What the bot hands you.</h2>
+      <p class="note">After <code>/parar</code> the recording folder holds two Markdown files. Here is an example of each,
+        with made-up speakers and a made-up meeting, in the layout the bot writes.</p>
+      <div class="docs">
+        <figure class="doc">
+          <figcaption><span class="tab">transcript.md</span><span class="tag">Example</span></figcaption>
+<pre class="md" lang="es"><code><span class="h"># Transcripción: general</span>
+
+<span class="d">_2026-10-04 17:05_</span>
+
+<span class="k">[00:04]</span> **Ana**: Vale, empezamos. Hoy toca cerrar la fecha de la presentación del trimestre.
+
+<span class="k">[00:15]</span> **Luis**: Yo propondría el jueves 15, así tenemos una semana para preparar las diapositivas.
+
+<span class="k">[00:27]</span> **Marta**: Me va bien el jueves. Puedo reservar la sala si alguien prepara el guion.
+
+<span class="k">[00:41]</span> **Ana**: El guion lo preparo yo. Luis, ¿puedes recopilar las cifras?
+
+<span class="k">[00:52]</span> **Luis**: Sí, las tengo el lunes.</code></pre>
+          <p class="docnote">One block per turn, in time order, with consecutive turns of one speaker merged. Timestamps
+            read <code>mm:ss</code>, or <code>h:mm:ss</code> after the first hour.</p>
+        </figure>
+
+        <figure class="doc">
+          <figcaption><span class="tab">summary.md</span><span class="tag">Example</span></figcaption>
+<pre class="md" lang="es"><code><span class="h"># Resumen: general</span>
+
+<span class="d">_2026-10-04 17:05_</span>
+
+<span class="h">## Resumen</span>
+
+El equipo ha acordado celebrar la presentación del trimestre el jueves 15 y ha repartido las tareas: sala, guion y cifras.
+
+<span class="h">## Decisiones</span>
+
+- La presentación será el jueves 15.
+
+<span class="h">## Tareas pendientes</span>
+
+- Preparar el guion: Ana.
+- Recopilar las cifras: Luis, el lunes.
+- Reservar la sala: Marta.</code></pre>
+          <p class="docnote">The bot adds the title and date. Claude writes the rest, in the three sections its prompt asks
+            for: a short summary, decisions, and action items with an owner and date when they are mentioned.</p>
+        </figure>
+      </div>
+      <p class="note">The sample is in Spanish because the bot writes in Spanish by default: its chat messages and
+        <code>summary.md</code> are in Spanish, and Whisper defaults to Castilian Spanish. <code>WHISPER_LANGUAGE</code>
+        and <code>WHISPER_PROMPT</code> change the transcription (the spoken language, and the initial prompt for
+        punctuation and vocabulary).</p>
+    </section>
+
     <section class="wrap" id="privacy" aria-labelledby="privacy-title">
       <h2 id="privacy-title">Built to stay on your side.</h2>
+      <div class="stat">
+        <p class="stat-fig"><span class="stat-num">0 bytes</span>
+          <span class="stat-unit">of audio leave your machine.</span></p>
+        <p class="stat-fine">Whisper runs locally and the audio files are deleted once transcribed. The only thing that can
+          go to Anthropic is <strong>transcript text, not audio</strong>, and only for the optional summary, through the
+          <code>claude</code> CLI and your own Claude login. Set <code>SUMMARY_ENABLED=false</code> and
+          <code>claude</code> is never run.</p>
+      </div>
       <ul class="cards">
         <li><h3>Audio never leaves your machine</h3>
           <p>Per-user audio goes to a temporary folder, is transcribed locally by whisper.cpp and is deleted once
@@ -151,6 +216,98 @@ npm start</code></pre>
         <p class="actions">
           <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#setup">Open the setup guide</a>
           <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">View the source</a>
+        </p>
+      </div>
+    </section>
+
+    <section class="wrap" id="faq" aria-labelledby="faq-title">
+      <h2 id="faq-title">Quick answers.</h2>
+      <p class="note">Drawn from the README's privacy, troubleshooting and known-limitations sections.</p>
+      <div class="faq">
+        <details>
+          <summary>Does my audio ever leave my machine?</summary>
+          <div class="answer">
+            <p>No. Per-user audio is written to a temporary folder, transcribed locally by whisper.cpp and deleted once
+              transcribed. Only transcript text, not audio, goes to Anthropic, and only to produce the summary, through the
+              <code>claude</code> CLI and your own Claude login. With <code>SUMMARY_ENABLED=false</code>,
+              <code>claude</code> is never run.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacy-and-access">More in the README: Privacy and access</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Can anyone else add the bot to their server?</summary>
+          <div class="answer">
+            <p>No. Switch <strong>Public Bot</strong> off in the Developer Portal and only you can add it.
+              <code>ALLOWED_GUILD_IDS</code> is required: the bot ignores interactions from other servers (DMs included)
+              and leaves any other server it is added to.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#privacy-and-access">More in the README: Privacy and access</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>The bot left my server by itself. Why?</summary>
+          <div class="answer">
+            <p>It leaves every server whose id is not in <code>ALLOWED_GUILD_IDS</code> (the log says
+              <code>Leaving guild</code>). The usual cause is a typo or a wrong id, for example when migrating from the old
+              <code>DISCORD_GUILD_ID</code>. Turn on Developer Mode in Discord, right-click the server, choose
+              <strong>Copy Server ID</strong>, put it in <code>.env</code>, restart the bot and invite it again.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">More in the README: Troubleshooting</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>The slash commands do not appear.</summary>
+          <div class="answer">
+            <p>They are registered per allowed server at startup. Check the log for
+              <code>Registered slash commands</code>, that the bot was added with the <code>applications.commands</code>
+              scope, and that the server id in <code>ALLOWED_GUILD_IDS</code> is right.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">More in the README: Troubleshooting</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>The transcript is empty or full of &ldquo;Gracias.&rdquo;</summary>
+          <div class="answer">
+            <p>The VAD model is missing (the bot warns about it at startup). Run <code>npm run download-models</code>.
+              Without it Whisper invents text on silence, and each speaker's track is mostly silence.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">More in the README: Troubleshooting</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>I got a transcript but no summary.</summary>
+          <div class="answer">
+            <p>Check that <code>claude -p "hi"</code> works for the user running the bot (services run as you, but with a
+              smaller <code>PATH</code>) and that <code>SUMMARY_ENABLED</code> is not <code>false</code>. If the summary
+              fails, the transcript is still saved and posted, with a warning.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#troubleshooting">More in the README: Troubleshooting</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Are there limits on simultaneous recordings?</summary>
+          <div class="answer">
+            <p>One recording per server at a time, and transcription jobs run one after another. If the bot is killed
+              mid-recording, the per-user WAV files stay in <code>recordings/.work/</code> and are not processed
+              automatically.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#known-limitations">More in the README: Known limitations</a></p>
+          </div>
+        </details>
+        <details>
+          <summary>Can a Discord update break it?</summary>
+          <div class="answer">
+            <p>Yes. Voice receive is unofficial in every Discord library and can break whenever Discord changes its voice
+              protocol (DAVE); update Dysnomia and Davey if it does. CI covers tests and typechecking on macOS, Linux and
+              Windows, not a live Discord session.</p>
+            <p class="more"><a href="https://github.com/Fishb0ness/discord-scribe#known-limitations">More in the README: Known limitations</a></p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="wrap" aria-labelledby="finale-title">
+      <div class="finale">
+        <h2 id="finale-title">Run your own scribe.</h2>
+        <p>Your Discord application, your machine, your transcripts. MIT licensed, with no hosted service in the
+          middle.</p>
+        <p class="actions">
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#setup">Follow the setup guide</a>
+          <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">Browse the repository</a>
         </p>
       </div>
     </section>
