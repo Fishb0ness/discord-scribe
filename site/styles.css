@@ -98,7 +98,8 @@ pre code { background: none; padding: 0; font-size: 1em; overflow-wrap: normal; 
 /* Header: a cream bar with an ink rule under it. */
 .top { background: var(--surface); border-bottom: 2px solid var(--line); }
 .bar { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .25rem 2rem; padding-block: .85rem; }
-.brand { font: 800 1.4rem/1 var(--display); letter-spacing: -.02em; text-decoration: none; }
+.brand { display: inline-flex; align-items: center; gap: .6rem; font: 800 1.4rem/1 var(--display); letter-spacing: -.02em; text-decoration: none; }
+.brand img { flex: none; width: 2rem; height: 2rem; }
 .brand:hover { color: inherit; }
 .top nav { display: flex; flex-wrap: wrap; gap: 0 1.4rem; font-size: .98rem; font-weight: 600; }
 .top nav a { padding: .45rem 0; text-decoration: none; }

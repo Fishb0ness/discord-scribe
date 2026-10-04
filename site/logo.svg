@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="discord-scribe">
+  <title>discord-scribe</title>
+  <rect width="512" height="512" rx="112" fill="#1B1A17"/>
+  <path fill="#FF6A52" d="M152 112H360A56 56 0 0 1 416 168V296A56 56 0 0 1 360 352H222L150 408L166 352H152A56 56 0 0 1 96 296V168A56 56 0 0 1 152 112Z"/>
+  <g fill="#F6F1E7">
+    <rect x="140" y="204" width="16" height="56" rx="8"/>
+    <rect x="168" y="176" width="16" height="112" rx="8"/>
+    <rect x="196" y="192" width="16" height="80" rx="8"/>
+    <rect x="224" y="212" width="16" height="40" rx="8"/>
+    <rect x="264" y="202" width="108" height="18" rx="9"/>
+    <rect x="264" y="244" width="72" height="18" rx="9"/>
+  </g>
+</svg>
