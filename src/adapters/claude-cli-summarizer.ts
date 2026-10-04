@@ -12,7 +12,8 @@ export const SUMMARY_PROMPT = [
 
 const SYSTEM_PROMPT = 'Eres un asistente que resume reuniones. Responde únicamente con el documento pedido, sin comentarios adicionales.';
 
-export function buildClaudeArgs(): string[] {
+export function buildClaudeArgs(model?: string): string[] {
+  const pinned = model?.trim();
   return [
     '-p',
     '--no-session-persistence',
@@ -20,6 +21,7 @@ export function buildClaudeArgs(): string[] {
     '--setting-sources', '',
     '--disable-slash-commands',
     '--system-prompt', SYSTEM_PROMPT,
+    ...(pinned ? ['--model', pinned] : []),
     SUMMARY_PROMPT
   ];
 }
@@ -28,11 +30,12 @@ export class ClaudeCliSummarizer implements Summarizer {
   constructor(
     private readonly bin: string,
     private readonly cwd: string,
-    private readonly timeoutMs = 10 * 60 * 1000
+    private readonly timeoutMs = 10 * 60 * 1000,
+    private readonly model?: string
   ) {}
 
   async summarize(transcriptMarkdown: string): Promise<string> {
-    const run = await runProcess(this.bin, buildClaudeArgs(), { stdin: transcriptMarkdown, cwd: this.cwd, timeoutMs: this.timeoutMs });
+    const run = await runProcess(this.bin, buildClaudeArgs(this.model), { stdin: transcriptMarkdown, cwd: this.cwd, timeoutMs: this.timeoutMs });
     if (run.code !== 0) throw new Error(`claude exited with code ${run.code}: ${(run.stderr || run.stdout).trim().slice(-500)}`);
     const out = run.stdout.trim();
     if (out === '') throw new Error('claude returned an empty summary');

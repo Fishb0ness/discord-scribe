@@ -15,6 +15,7 @@ export interface Config {
   /** When false, no transcript text is ever sent to Claude/Anthropic and only the transcript is produced. */
   summaryEnabled: boolean;
   claudeBin: string;
+  claudeModel?: string | undefined;
   recordingsDir: string;
 }
 
@@ -95,6 +96,7 @@ export function loadConfig(env: Env): Config {
     whisperBeamSize: beamSize,
     summaryEnabled,
     claudeBin: read(env, 'CLAUDE_BIN') ?? 'claude',
+    claudeModel: read(env, 'CLAUDE_MODEL'),
     recordingsDir: read(env, 'RECORDINGS_DIR') ?? 'recordings'
   };
 }

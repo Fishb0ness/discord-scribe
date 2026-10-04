@@ -51,6 +51,16 @@ describe('buildClaudeArgs', () => {
     expect(args[args.indexOf('--tools') + 1]).toBe('');
     expect(args[args.indexOf('--setting-sources') + 1]).toBe('');
   });
+  it('pins the model before the prompt when one is given', () => {
+    const args = buildClaudeArgs('sonnet');
+    expect(args[args.indexOf('--model') + 1]).toBe('sonnet');
+    expect(args.indexOf('--model')).toBeLessThan(args.length - 1);
+    expect(args[args.length - 1]).toBe(SUMMARY_PROMPT);
+  });
+  it('omits --model when undefined or blank', () => {
+    expect(buildClaudeArgs()).not.toContain('--model');
+    expect(buildClaudeArgs('  ')).not.toContain('--model');
+  });
   it('asks for a Spanish summary with decisions and action items', () => {
     expect(SUMMARY_PROMPT).toMatch(/español/i);
     expect(SUMMARY_PROMPT).toMatch(/decisiones/i);

@@ -136,6 +136,7 @@ Discord lo aplica por sí mismo, así que el bot no necesita ninguna configuraci
 | `WHISPER_BEAM_SIZE` | `8` | Tamaño del beam y best-of (más alto es más lento y algo más preciso) |
 | `WHISPER_PROMPT` | párrafo integrado en castellano | Prompt inicial para la puntuación y el vocabulario. Déjalo vacío para desactivarlo. Solo cambia la transcripción |
 | `CLAUDE_BIN` | `claude` | CLI de Claude Code |
+| `CLAUDE_MODEL` | (predeterminado de la cuenta) | Modelo que genera el resumen: acepta `sonnet`, `haiku`, `opus` o un id de modelo completo. Sin esta variable se usa el modelo predeterminado de tu cuenta |
 | `RECORDINGS_DIR` | `recordings` | Carpeta de salida |
 
 Las rutas relativas se resuelven respecto al directorio de trabajo (la carpeta del proyecto cuando se ejecuta como
