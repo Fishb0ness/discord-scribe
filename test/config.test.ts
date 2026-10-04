@@ -19,6 +19,7 @@ describe('loadConfig', () => {
       whisperBeamSize: 8,
       summaryEnabled: true,
       claudeBin: 'claude',
+      claudeModel: undefined,
       recordingsDir: 'recordings'
     });
   });
@@ -34,6 +35,11 @@ describe('loadConfig', () => {
     const c = loadConfig({ ...base, DISCORD_GUILD_ID: '', WHISPER_BIN: '' });
     expect(c.allowedGuildIds).toEqual(['111111111111111111']);
     expect(c.whisperBin).toBe('whisper-cli');
+  });
+
+  it('reads CLAUDE_MODEL trimmed and treats empty as unset', () => {
+    expect(loadConfig({ ...base, CLAUDE_MODEL: ' sonnet ' }).claudeModel).toBe('sonnet');
+    expect(loadConfig({ ...base, CLAUDE_MODEL: '' }).claudeModel).toBeUndefined();
   });
 
   it('reports every missing required variable at once', () => {

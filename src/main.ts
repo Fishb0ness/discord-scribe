@@ -49,7 +49,7 @@ const bot = new DiscordBot({
         beamSize: config.whisperBeamSize
       }),
       // Run claude from the recordings dir so it never picks up a project's instructions.
-      summarizer: config.summaryEnabled ? new ClaudeCliSummarizer(config.claudeBin, recordingsDir) : undefined,
+      summarizer: config.summaryEnabled ? new ClaudeCliSummarizer(config.claudeBin, recordingsDir, undefined, config.claudeModel) : undefined,
       output: new FilesystemOutputStore(recordingsDir),
       notifier: new DiscordChatNotifier(client),
       log

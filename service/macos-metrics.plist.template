@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template (metrics sampler, --metrics): scripts/install-service-macos.sh replaces the {{PLACEHOLDERS}}. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>{{LABEL}}</string>
+{{USER_KEYS}}
+  <key>ProgramArguments</key>
+  <array>
+    <string>{{NODE_BIN}}</string>
+    <string>{{PROJECT_DIR}}/scripts/service-metrics.mjs</string>
+    <string>sample</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>{{PROJECT_DIR}}</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>{{PATH}}</string>
+{{ENV_EXTRA}}
+  </dict>
+
+  <!-- One sample every 5 minutes. -->
+  <key>StartInterval</key>
+  <integer>300</integer>
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>{{LOG_DIR}}/metrics.log</string>
+  <key>StandardErrorPath</key>
+  <string>{{LOG_DIR}}/metrics.err.log</string>
+</dict>
+</plist>
