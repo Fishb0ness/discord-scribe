@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildKillPlan, killProcessTree, killRunningProcesses, runProcess } from '../src/adapters/run-process.js';
+import { buildKillPlan, killProcessTree, killRunningProcesses, runningProcessCount, runProcess } from '../src/adapters/run-process.js';
 
 describe('runProcess', () => {
   it('collects output and exit code', async () => {
@@ -7,15 +7,27 @@ describe('runProcess', () => {
     expect(r).toMatchObject({ stdout: 'hi', code: 0 });
   });
 
+  const CLOSE_WAIT_MS = 3000;
+  const POLL_MS = 50;
+
+  /** Tree kills are asynchronous on Windows (taskkill): poll until every child has closed. */
+  async function waitForNoRunningChildren(): Promise<void> {
+    const deadline = Date.now() + CLOSE_WAIT_MS;
+    while (runningProcessCount() > 0 && Date.now() < deadline) await new Promise((r) => setTimeout(r, POLL_MS));
+  }
+
   it('kills the child and rejects when the timeout elapses', async () => {
     const started = Date.now();
     await expect(runProcess('node', ['-e', 'setTimeout(() => {}, 30000)'], { timeoutMs: 100 })).rejects.toThrow(/timed out/);
+    await waitForNoRunningChildren();
+    expect(runningProcessCount()).toBe(0);
     expect(Date.now() - started).toBeLessThan(5000);
   });
 
   it('kills every running child on demand', async () => {
     const running = runProcess('node', ['-e', 'setTimeout(() => {}, 30000)']);
     await new Promise((r) => setTimeout(r, 100));
+    expect(runningProcessCount()).toBe(1);
     expect(killRunningProcesses()).toBe(1);
     const r = await running;
     expect(r.code).not.toBe(0);
