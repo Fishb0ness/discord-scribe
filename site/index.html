@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>discord-scribe: a private note-taker for Discord voice</title>
+  <meta name="description" content="A self-hosted, private note-taker bot for Discord. It records each speaker, transcribes locally with whisper.cpp and delivers a Markdown transcript and summary. No hosted service.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f1e7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14130f" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://fishb0ness.github.io/discord-scribe/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="discord-scribe: a private note-taker for Discord voice">
+  <meta property="og:description" content="Self-hosted. Records each speaker, transcribes locally with whisper.cpp, optional summary through your own Claude Code CLI.">
+  <meta property="og:url" content="https://fishb0ness.github.io/discord-scribe/">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231b1a17'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff6a52'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="wrap top">
+    <a class="brand" href="./">discord-scribe</a>
+    <nav aria-label="Page sections">
+      <a href="#flow">How it works</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#platforms">Platforms</a>
+      <a href="#setup">Setup</a>
+      <a href="https://github.com/Fishb0ness/discord-scribe">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="wrap hero" aria-labelledby="top-title">
+      <div>
+        <p class="eyebrow">Self-hosted &middot; MIT licensed &middot; Node.js 22+</p>
+        <h1 id="top-title">A private note-taker for your Discord voice channel.</h1>
+        <p class="lede">discord-scribe records each speaker separately, transcribes <strong>locally</strong> with
+          <a href="https://github.com/ggml-org/whisper.cpp">whisper.cpp</a>, and delivers a Markdown transcript and
+          summary. You run your own Discord application on your own machine. There is no hosted service and nobody else
+          can invite your bot.</p>
+        <p class="actions">
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe">Get it on GitHub</a>
+          <a class="btn" href="https://github.com/Fishb0ness/discord-scribe#setup">Read the setup guide</a>
+        </p>
+      </div>
+
+      <figure class="sheet">
+        <p class="rec"><span class="dot" aria-hidden="true"></span>
+          <span>While recording, the bot renames itself <code>[GRABANDO] ...</code></span></p>
+        <div class="lanes" aria-hidden="true"><i class="l1"></i><i class="l2"></i><i class="l3"></i></div>
+        <figcaption>One track per speaker; each one is mostly silence. Whisper reads every track locally and the turns are
+          merged in time order.</figcaption>
+        <dl class="cmds">
+          <dt><code>/grabar</code></dt>
+          <dd>The bot joins your voice channel and announces the recording.</dd>
+          <dt><code>/parar</code></dt>
+          <dd>Transcribes, summarizes and posts the result in the text channel where you used <code>/grabar</code>.</dd>
+        </dl>
+      </figure>
+    </section>
+
+    <section class="wrap" id="flow" aria-labelledby="flow-title">
+      <h2 id="flow-title">From <code>/grabar</code> to Markdown</h2>
+      <ol class="steps">
+        <li><h3>Record</h3>
+          <p>The bot joins your voice channel, announces the recording in the text channel and writes one WAV file per
+            speaker. The recording also stops by itself when the channel empties.</p></li>
+        <li><h3>Transcribe</h3>
+          <p>On <code>/parar</code> each track goes through <code>whisper-cli</code> on your machine. The turns are merged
+            into one time-ordered transcript, and the WAV files are deleted once transcribed.</p></li>
+        <li><h3>Summarize</h3>
+          <p>Optionally, <code>claude -p</code> writes the summary. It is posted where <code>/grabar</code> was used, with
+            <code>transcript.md</code> attached. If the summary fails, the transcript is still saved and posted.</p></li>
+      </ol>
+      <div class="out">
+        <pre tabindex="0"><code>recordings/2026-10-04_1705-general/
+  transcript.md
+  summary.md</code></pre>
+        <dl>
+          <dt><code>transcript.md</code></dt>
+          <dd><code>[mm:ss] **Name**: text</code>, time-ordered, consecutive turns of one speaker merged.</dd>
+          <dt><code>summary.md</code></dt>
+          <dd>Summary, decisions, and action items with owners.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="wrap" id="privacy" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">Built to stay on your side.</h2>
+      <ul class="cards">
+        <li><h3>Audio never leaves your machine</h3>
+          <p>Per-user audio goes to a temporary folder, is transcribed locally by whisper.cpp and is deleted once
+            transcribed.</p></li>
+        <li><h3>The summary is optional</h3>
+          <p>Only transcript text, not audio, goes to Anthropic, through the <code>claude</code> CLI and your own Claude
+            login. With <code>SUMMARY_ENABLED=false</code>, <code>claude</code> is never run.</p></li>
+        <li><h3>Only your servers</h3>
+          <p><code>ALLOWED_GUILD_IDS</code> is required. The bot ignores interactions from anywhere else, DMs included,
+            and leaves any other server it is added to.</p></li>
+        <li><h3>Only people you allow</h3>
+          <p>Restrict <code>/grabar</code> with Discord's own command permissions. <code>/parar</code> only works for
+            someone in the voice channel being recorded.</p></li>
+        <li><h3>Nobody else can invite it</h3>
+          <p>Switch <strong>Public Bot</strong> off in the Developer Portal and only you can add the bot to a server.</p></li>
+        <li><h3>Your token stays local</h3>
+          <p>It lives only in your <code>.env</code>, which git ignores. A pre-commit hook and a CI scan refuse to publish
+            secrets.</p></li>
+      </ul>
+      <aside class="consent" aria-labelledby="consent-title">
+        <h3 id="consent-title">Tell the people you record.</h3>
+        <p>Recording voices has legal consequences (GDPR and similar laws). The bot announces the recording and renames
+          itself for the whole session, but getting consent is your responsibility.</p>
+      </aside>
+    </section>
+
+    <section class="wrap" id="platforms" aria-labelledby="platforms-title">
+      <h2 id="platforms-title">Runs on macOS, Linux and Windows.</h2>
+      <ul class="cards">
+        <li><h3>macOS</h3>
+          <p><code>brew install whisper-cpp</code>, then run it as a launchd LaunchAgent.</p></li>
+        <li><h3>Linux</h3>
+          <p>Build whisper.cpp from source, then run it as a systemd user unit.</p></li>
+        <li><h3>Windows</h3>
+          <p>Use the whisper.cpp release zip or build it, then run it as a Scheduled Task at logon.</p></li>
+      </ul>
+      <p class="note">Every system needs Node.js 22+ and git. The Claude Code CLI is only needed while summaries are on.
+        The service installers start the bot at login and restart it on failure.</p>
+      <h3>Good to know</h3>
+      <ul class="plain">
+        <li>The bot's chat messages and <code>summary.md</code> are in Spanish. Whisper defaults to Castilian Spanish;
+          <code>WHISPER_LANGUAGE</code> and <code>WHISPER_PROMPT</code> change that.</li>
+        <li>Voice receive is unofficial in every Discord library and can break when Discord changes its voice protocol.</li>
+        <li>One recording per server at a time; transcription jobs run one after another.</li>
+        <li>CI covers tests and typechecking on all three systems, not a live Discord session.</li>
+      </ul>
+    </section>
+
+    <section class="wrap" id="setup" aria-labelledby="setup-title">
+      <div class="setup">
+        <h2 id="setup-title">Clone it, fill in <code>.env</code>, run it.</h2>
+        <pre tabindex="0"><code>git clone https://github.com/Fishb0ness/discord-scribe
+cd discord-scribe
+npm install
+npm run download-models   # large-v3 (about 3 GB) + Silero VAD
+cp .env.example .env      # Windows: copy .env.example .env
+npm start</code></pre>
+        <p>You will also create your own Discord application and add its token and your server ID to <code>.env</code>.
+          The README walks through every step.</p>
+        <p class="actions">
+          <a class="btn primary" href="https://github.com/Fishb0ness/discord-scribe#setup">Open the setup guide</a>
+          <a class="btn" href="https://github.com/Fishb0ness/discord-scribe">View the source</a>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>discord-scribe &middot; <a href="https://github.com/Fishb0ness/discord-scribe/blob/main/LICENSE">MIT License</a>
+      &middot; &copy; 2026 Fishb0ness</p>
+  </footer>
+</body>
+</html>

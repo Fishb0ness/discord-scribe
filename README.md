@@ -4,6 +4,8 @@ A **self-hosted, private note-taker bot** for Discord. It records a voice channe
 **locally** with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), optionally summarizes it with the
 [Claude Code CLI](https://docs.claude.com/en/docs/claude-code), and delivers a Markdown transcript and summary.
 
+Website: <https://fishb0ness.github.io/discord-scribe/>
+
 You run your own Discord application on your own machine. There is no hosted service and nobody else can invite
 your bot (see [Privacy and access](#privacy-and-access)).
 
