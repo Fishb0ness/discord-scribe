@@ -154,3 +154,22 @@ describe('formatNotesSection', () => {
     expect(formatNotesSection([])).toBe('');
   });
 });
+
+describe('note ordering and markdown escaping', () => {
+  it('places a note after a speech block that starts at the same instant', () => {
+    const { markdown } = mergeTranscript([{ speaker: 'Ana', segments: [seg(10_000, 11_000, 'Hola')] }], [{ author: 'Luis', text: 'n', atMs: 10_000 }]);
+    expect(markdown).toBe('[00:10] **Ana**: Hola\n\n[00:10] 📎 **Nota de Luis**: n\n');
+  });
+
+  it('escapes markdown metacharacters in author and text but keeps URLs intact', () => {
+    const note = { author: 'a*b_c', text: 'ver **esto** _ya_ `x` [a](b) https://example.com/a_b?x=1&y=2 fin', atMs: 0 };
+    const expected = 'ver \\*\\*esto\\*\\* \\_ya\\_ \\`x\\` \\[a\\](b) https://example.com/a_b?x=1&y=2 fin';
+    expect(mergeTranscript([], [note]).markdown).toBe(`[00:00] 📎 **Nota de a\\*b\\_c**: ${expected}\n`);
+    expect(formatNotesSection([note])).toBe(`## Notas\n\n- [00:00] **a\\*b\\_c**: ${expected}\n`);
+  });
+
+  it('leaves speaker rendering unchanged', () => {
+    const { markdown } = mergeTranscript([{ speaker: 'A_b*', segments: [seg(0, 1000, 'x_y')] }]);
+    expect(markdown).toBe('[00:00] **A_b*** : x_y\n'.replace('*** :', '***:'));
+  });
+});

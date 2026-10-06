@@ -93,10 +93,23 @@ export function isHallucination(text: string): boolean {
 
 const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim();
 
+const escapeMarkdown = (text: string) => text.replace(/[\\*_`~|[\]<>]/g, '\\$&');
+
+/** Escapes markdown in a note's author. */
+const noteAuthor = (author: string) => escapeMarkdown(oneLine(author));
+
+/** Escapes markdown in a note's text on one line, leaving URLs untouched so they stay clickable. */
+function noteText(text: string): string {
+  return oneLine(text)
+    .split(/(https?:\/\/\S+)/)
+    .map((part, i) => (i % 2 === 1 ? part : escapeMarkdown(part)))
+    .join('');
+}
+
 /** Trailing "Notas" section for summary.md; empty when there are no notes. */
 export function formatNotesSection(notes: Note[]): string {
   if (notes.length === 0) return '';
-  const lines = [...notes].sort((a, b) => a.atMs - b.atMs).map((n) => `- [${formatTimestamp(n.atMs)}] **${n.author}**: ${oneLine(n.text)}`);
+  const lines = [...notes].sort((a, b) => a.atMs - b.atMs).map((n) => `- [${formatTimestamp(n.atMs)}] **${noteAuthor(n.author)}**: ${noteText(n.text)}`);
   return `## Notas\n\n${lines.join('\n')}\n`;
 }
 
@@ -128,7 +141,7 @@ export function mergeTranscript(tracks: SpeakerTrack[], notes: Note[] = []): Mer
   }));
   // A note goes before the first block that starts after it; a block spanning its time stays whole.
   for (const n of [...notes].sort((a, b) => a.atMs - b.atMs)) {
-    const line = `[${formatTimestamp(n.atMs)}] 📎 **Nota de ${n.author}**: ${oneLine(n.text)}`;
+    const line = `[${formatTimestamp(n.atMs)}] 📎 **Nota de ${noteAuthor(n.author)}**: ${noteText(n.text)}`;
     const at = entries.findIndex((e) => e.atMs > n.atMs);
     entries.splice(at === -1 ? entries.length : at, 0, { atMs: n.atMs, line });
   }
