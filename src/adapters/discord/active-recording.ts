@@ -1,4 +1,5 @@
 import type { AnyVoiceChannel, Client, VoiceConnection } from '@projectdysnomia/dysnomia';
+import type { Note } from '../../domain/transcript.js';
 import { SessionRecorder, type FinishedTrack } from '../../app/session-recorder.js';
 import { withRecordingIndicator, withoutRecordingIndicator } from '../../domain/nickname.js';
 import { createPacketGuard } from '../../domain/packet-guard.js';
@@ -33,12 +34,14 @@ export class ActiveRecording {
   readonly textChannelId: string;
   readonly startedAt = new Date();
   readonly workDir: string;
+  readonly notes: Note[] = [];
 
   private readonly client: Client;
   private readonly log: ActiveRecordingOptions['log'];
   private readonly onAutoStop: ActiveRecordingOptions['onAutoStop'];
   private readonly recovery = new EncryptionRecoveryMonitor(5);
   private recorder!: SessionRecorder;
+  private startNs: bigint | null = null;
   private connection: VoiceConnection | null = null;
   private stopped = false;
   private reconnecting = false;
@@ -56,15 +59,26 @@ export class ActiveRecording {
     this.onAutoStop = opts.onAutoStop;
   }
 
+  /** Milliseconds since the audio clock started: the same zero as the offsets of the per-speaker WAVs. */
+  elapsedMs(): number {
+    if (this.startNs === null) return 0; // not started yet: there is no zero to measure from
+    return Number(process.hrtime.bigint() - this.startNs) / 1e6;
+  }
+
+  addNote(author: string, text: string): void {
+    this.notes.push({ author, text, atMs: Math.round(this.elapsedMs()) });
+  }
+
   get guildId(): string {
     return this.channel.guild.id;
   }
 
   async start(): Promise<void> {
     await mkdir(this.workDir, { recursive: true });
+    this.startNs = process.hrtime.bigint();
     this.recorder = new SessionRecorder({
       nowNs: () => process.hrtime.bigint(),
-      startNs: process.hrtime.bigint(),
+      startNs: this.startNs,
       createDecoder: createOpusDecoder,
       createWav: (userId) => new WavFileWriter(join(this.workDir, `${userId}.wav`)),
       onTrackError: (userId, e) => this.log(`Could not finalize the audio of user ${userId}`, e)

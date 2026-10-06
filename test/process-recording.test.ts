@@ -181,3 +181,44 @@ describe('processRecording', () => {
     expect(notifier.posted).toHaveLength(1);
   });
 });
+
+describe('processRecording notes', () => {
+  const notes = [{ author: 'Luis', text: 'https://x.dev/doc', atMs: 1500 }];
+
+  it('puts notes in the transcript, the summarizer input and a Notas section of the summary', async () => {
+    const store = new FakeStore();
+    const calls: string[] = [];
+    await processRecording(
+      { transcriber: transcriber({ '/w/ana.wav': [seg(0, 'Hola'), seg(3000, 'Adios')] }), summarizer: okSummarizer(calls), output: store, notifier: new FakeNotifier() },
+      { ...input, notes }
+    );
+    const transcript = store.files.get('/out/general/transcript.md')!;
+    expect(transcript).toContain('[00:01] 📎 **Nota de Luis**: https://x.dev/doc');
+    expect(calls[0]).toContain('📎 **Nota de Luis**: https://x.dev/doc');
+    const summary = store.files.get('/out/general/summary.md')!;
+    expect(summary).toContain('Todo bien.');
+    expect(summary.trimEnd().endsWith('## Notas\n\n- [00:01] **Luis**: https://x.dev/doc')).toBe(true);
+  });
+
+  it('keeps notes in the transcript but skips the summary when nobody spoke', async () => {
+    const store = new FakeStore();
+    const calls: string[] = [];
+    const r = await processRecording(
+      { transcriber: transcriber({}), summarizer: okSummarizer(calls), output: store, notifier: new FakeNotifier() },
+      { ...input, notes }
+    );
+    expect(calls).toHaveLength(0);
+    expect(r.summary).toBeUndefined();
+    expect(r.warnings.join(' ')).toMatch(/voz/i);
+    expect(store.files.get('/out/general/transcript.md')).toContain('**Nota de Luis**');
+  });
+
+  it('writes no Notas section when there are no notes', async () => {
+    const store = new FakeStore();
+    await processRecording(
+      { transcriber: transcriber({ '/w/ana.wav': [seg(0, 'Hola')] }), summarizer: okSummarizer(), output: store, notifier: new FakeNotifier() },
+      input
+    );
+    expect(store.files.get('/out/general/summary.md')).not.toContain('Notas');
+  });
+});

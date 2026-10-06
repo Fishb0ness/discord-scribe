@@ -11,11 +11,12 @@ import type { ProcessRecordingInput } from '../../app/process-recording.js';
 import { guildsToLeave, isGuildAllowed } from '../../domain/access.js';
 import { staleIndicatorFix } from '../../domain/nickname.js';
 import { uniqueSpeakerNames } from '../../domain/speaker-names.js';
+import type { Note } from '../../domain/transcript.js';
 import type { FinishedTrack } from '../../app/session-recorder.js';
 import { killRunningProcesses } from '../run-process.js';
 import { ActiveRecording, type ActiveRecordingOptions } from './active-recording.js';
 import { stopMessage, type StopReason } from './stop-reason.js';
-import { COMMANDS, RECORD_COMMAND, STOP_COMMAND } from './commands.js';
+import { COMMANDS, NOTE_COMMAND, NOTE_OPTION, RECORD_COMMAND, STOP_COMMAND } from './commands.js';
 
 /** Discord message flag EPHEMERAL (1 << 6): only the invoking user sees the reply. */
 const EPHEMERAL_FLAG = 64;
@@ -31,6 +32,10 @@ export interface RecordingHandle {
   start(): Promise<void>;
   stop(): Promise<FinishedTrack[]>;
   checkEmpty(): void;
+  /** Notes added with /nota so far. */
+  readonly notes: readonly Note[];
+  /** Stores a note stamped with the time elapsed since the audio clock started. */
+  addNote(author: string, text: string): void;
 }
 
 export type RecordingParams = ActiveRecordingOptions;
@@ -180,6 +185,7 @@ export class DiscordBot {
     try {
       if (interaction.data.name === RECORD_COMMAND) await this.handleRecord(interaction);
       else if (interaction.data.name === STOP_COMMAND) await this.handleStop(interaction);
+      else if (interaction.data.name === NOTE_COMMAND) await this.handleNote(interaction);
     } catch (e) {
       this.opts.log(`Command ${interaction.data.name} failed`, e);
       await this.reply(interaction, 'Algo ha fallado. Inténtalo de nuevo en un momento.').catch(() => {});
@@ -250,7 +256,7 @@ export class DiscordBot {
           `🔴 **Grabando** ${channel.mention}.\n` +
           'Todo lo que se diga en este canal se está grabando para transcribirlo y resumirlo. ' +
           'El audio se procesa en un servidor propio. Si no quieres que se grabe tu voz, sal del canal.\n' +
-          'Cuando terminéis, usa `/parar`.'
+          'Para dejar un enlace o una nota en la transcripción, usa `/nota`. Cuando terminéis, usa `/parar`.'
       });
     } catch (e) {
       this.opts.log('Could not announce the recording', e);
@@ -273,6 +279,22 @@ export class DiscordBot {
     }
     await interaction.defer();
     await this.finish(rec.guildId, 'user', interaction);
+  }
+
+  /** Handles `/nota`: same access rule as `/parar`. */
+  async handleNote(interaction: CommandInteraction): Promise<void> {
+    const guildId = interaction.guild?.id;
+    const rec = guildId ? this.recordings.get(guildId) : undefined;
+    if (!rec) return this.reply(interaction, 'No hay ninguna grabación en curso.', true);
+    const member = interaction.member;
+    if (!member || !rec.channel.voiceMembers.has(member.id)) {
+      return this.reply(interaction, 'Solo quien esté en el canal de voz que se está grabando puede añadir notas.', true);
+    }
+    const option = interaction.data.options?.find((o) => o.name === NOTE_OPTION);
+    const text = typeof (option as { value?: unknown } | undefined)?.value === 'string' ? ((option as { value: string }).value).trim() : '';
+    if (text === '') return this.reply(interaction, 'La nota no puede estar vacía.', true);
+    rec.addNote(displayName(member), text);
+    await this.reply(interaction, '📎 Nota guardada.', true);
   }
 
   /** Auto-stop entry point: applies the stop now, or remembers it if the recording is still starting. */
@@ -313,7 +335,8 @@ export class DiscordBot {
       channelName: rec.channel.name,
       textChannelId: rec.textChannelId,
       startedAt: rec.startedAt,
-      tracks: tracks.map((t) => ({ speaker: names.get(t.userId) ?? `Usuario ${t.userId}`, wavPath: t.wavPath }))
+      tracks: tracks.map((t) => ({ speaker: names.get(t.userId) ?? `Usuario ${t.userId}`, wavPath: t.wavPath })),
+      notes: [...rec.notes]
     };
 
     // One transcription at a time: whisper-large saturates the GPU.

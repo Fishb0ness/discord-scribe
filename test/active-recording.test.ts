@@ -56,4 +56,36 @@ describe('ActiveRecording', () => {
     expect(connection.receive).not.toHaveBeenCalled();
     expect(s.client.editGuildMember).not.toHaveBeenCalled();
   });
+
+  describe('notes', () => {
+    // Controllable monotonic clock: ActiveRecording and the SessionRecorder both read process.hrtime.bigint.
+    let nowNs = 0n;
+    const mockClock = () => vi.spyOn(process.hrtime, 'bigint').mockImplementation(() => nowNs);
+    afterEach(() => vi.restoreAllMocks());
+
+    it('stamps notes relative to the same start stamp the recorder uses for WAV offsets', async () => {
+      mockClock();
+      nowNs = 9_000_000_000_000n; // arbitrary process uptime at start
+      const s = await setup();
+      const started = s.rec.start();
+      await vi.waitFor(() => expect(s.channel.join).toHaveBeenCalled());
+      s.join(fakeConnection());
+      await started;
+
+      nowNs += 12_345_000_000n;
+      s.rec.addNote('Ana', 'https://x.dev');
+      expect(s.rec.elapsedMs()).toBe(12_345);
+      expect(s.rec.notes).toEqual([{ author: 'Ana', text: 'https://x.dev', atMs: 12_345 }]);
+      await s.rec.stop();
+    });
+
+    it('stamps a note added before start() at 0 instead of the process uptime', async () => {
+      mockClock();
+      nowNs = 9_000_000_000_000n;
+      const s = await setup();
+      expect(s.rec.elapsedMs()).toBe(0);
+      s.rec.addNote('Ana', 'early');
+      expect(s.rec.notes[0]!.atMs).toBe(0);
+    });
+  });
 });

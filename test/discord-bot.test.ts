@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events';
 import { describe, expect, it, vi } from 'vitest';
 import type { Client } from '@projectdysnomia/dysnomia';
 import { DiscordBot, clientOptions, type RecordingHandle, type RecordingParams } from '../src/adapters/discord/discord-bot.js';
+import type { Note } from '../src/domain/transcript.js';
 import type { FinishedTrack } from '../src/app/session-recorder.js';
 
 const GUILD = 'guild-1';
@@ -25,13 +26,13 @@ function fakeClient() {
   return { client, channel };
 }
 
-function fakeInteraction(opts: { deferRejects?: boolean; guildId?: string | null } = {}) {
+function fakeInteraction(opts: { deferRejects?: boolean; guildId?: string | null; command?: string; texto?: string; member?: Record<string, unknown> } = {}) {
   const calls = { createMessage: [] as string[], edit: [] as string[] };
   const i = {
     guild: opts.guildId === null ? undefined : { id: opts.guildId ?? GUILD },
-    member: { id: 'user-1' },
+    member: opts.member ?? { id: 'user-1', username: 'ana' },
     channel: { id: 'text-1' },
-    data: { name: 'grabar' },
+    data: { name: opts.command ?? 'grabar', options: opts.texto === undefined ? undefined : [{ name: 'texto', type: 3, value: opts.texto }] },
     acknowledged: false,
     defer: vi.fn(async () => {
       if (opts.deferRejects) throw new Error('interaction expired');
@@ -50,6 +51,8 @@ class FakeRecording implements RecordingHandle {
   readonly workDir: string;
   readonly guildId = GUILD;
   stops = 0;
+  elapsed = 0;
+  readonly notes: Note[] = [];
   constructor(readonly params: RecordingParams, private readonly behaviour: { onStart?: (p: RecordingParams) => void | Promise<void>; stopFails?: boolean } = {}) {
     this.textChannelId = params.textChannelId;
     this.channel = params.channel;
@@ -64,6 +67,12 @@ class FakeRecording implements RecordingHandle {
     return [];
   }
   checkEmpty() {}
+  elapsedMs() {
+    return this.elapsed;
+  }
+  addNote(author: string, text: string) {
+    this.notes.push({ author, text, atMs: this.elapsed });
+  }
 }
 
 function setup(
@@ -284,5 +293,71 @@ describe('access control', () => {
     const s = setup();
     await s.bot.handleCommand(fakeInteraction().i as never);
     expect(s.recordings).toHaveLength(1);
+  });
+});
+
+describe('/nota', () => {
+  const note = (bot: DiscordBot, opts: Parameters<typeof fakeInteraction>[0] = {}) => {
+    const x = fakeInteraction({ command: 'nota', texto: 'https://x.dev/doc', ...opts });
+    return bot.handleNote(x.i as never).then(() => x);
+  };
+
+  it('rejects, ephemeral, when nothing is being recorded', async () => {
+    const s = setup();
+    const x = await note(s.bot);
+    expect(x.i.createMessage).toHaveBeenCalledWith(expect.objectContaining({ flags: 64 }));
+    expect(x.calls.createMessage.join(' ')).toBe('No hay ninguna grabación en curso.');
+  });
+
+  it('rejects members who are not in the recorded channel', async () => {
+    const s = setup();
+    await record(s.bot, fakeInteraction().i);
+    const x = await note(s.bot, { member: { id: 'intruder', username: 'eve' } });
+    expect(x.i.createMessage).toHaveBeenCalledWith(expect.objectContaining({ flags: 64 }));
+    expect(x.calls.createMessage.join(' ')).toMatch(/Solo quien esté en el canal de voz/);
+    expect(s.recordings[0]!.notes).toEqual([]);
+  });
+
+  it('rejects empty notes', async () => {
+    const s = setup();
+    await record(s.bot, fakeInteraction().i);
+    const x = await note(s.bot, { texto: '   ' });
+    expect(x.i.createMessage).toHaveBeenCalledWith(expect.objectContaining({ flags: 64 }));
+    expect(s.recordings[0]!.notes).toEqual([]);
+  });
+
+  it('stores the note with the display name and the recording offset, and confirms ephemerally', async () => {
+    const s = setup();
+    await record(s.bot, fakeInteraction().i);
+    s.recordings[0]!.elapsed = 12_345;
+    const x = await note(s.bot, { texto: '  https://x.dev/doc  ', member: { id: 'user-1', username: 'ana', nick: 'Ana M' } });
+    expect(s.recordings[0]!.notes).toEqual([{ author: 'Ana M', text: 'https://x.dev/doc', atMs: 12_345 }]);
+    expect(x.i.createMessage).toHaveBeenCalledWith(expect.objectContaining({ flags: 64, content: '📎 Nota guardada.' }));
+  });
+
+  it('is dispatched from handleCommand', async () => {
+    const s = setup();
+    await record(s.bot, fakeInteraction().i);
+    await s.bot.handleCommand(fakeInteraction({ command: 'nota', texto: 'hola' }).i as never);
+    expect(s.recordings[0]!.notes).toHaveLength(1);
+  });
+
+  it('passes the notes to the processor when the recording finishes', async () => {
+    const s = setup();
+    await record(s.bot, fakeInteraction().i);
+    const rec = s.recordings[0]!;
+    rec.stop = async () => [{ userId: 'user-1', wavPath: '/w/a.wav', samples: 1 }];
+    await note(s.bot);
+    await s.bot.handleStop(fakeInteraction({ command: 'parar' }).i as never);
+    await tick();
+    expect(s.processed).toHaveBeenCalledWith(expect.objectContaining({ notes: [{ author: 'ana', text: 'https://x.dev/doc', atMs: 0 }] }));
+  });
+});
+
+describe('command registry', () => {
+  it('registers /nota with a required texto string option', async () => {
+    const { COMMANDS } = await import('../src/adapters/discord/commands.js');
+    const cmd = COMMANDS.find((c) => c.name === 'nota')!;
+    expect(cmd.options).toEqual([expect.objectContaining({ name: 'texto', type: 3, required: true, max_length: 1000 })]);
   });
 });

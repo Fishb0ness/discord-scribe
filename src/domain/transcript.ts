@@ -13,7 +13,15 @@ export interface LabelledSegment extends Segment {
   speaker: string;
 }
 
+/** A text note a participant added during the recording; `atMs` is the offset from recording start. */
+export interface Note {
+  author: string;
+  text: string;
+  atMs: number;
+}
+
 export interface MergedTranscript {
+  /** Speech only: notes are never counted here. */
   segments: LabelledSegment[];
   markdown: string;
 }
@@ -83,7 +91,49 @@ export function isHallucination(text: string): boolean {
   return HALLUCINATION_SUBSTRINGS.some((s) => n.includes(s));
 }
 
-export function mergeTranscript(tracks: SpeakerTrack[]): MergedTranscript {
+const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+const escapeMarkdown = (text: string) => text.replace(/[\\*_`~|[\]<>]/g, '\\$&');
+
+/** Escapes markdown in a note's author. */
+const noteAuthor = (author: string) => escapeMarkdown(oneLine(author));
+
+/** Markdown metacharacters glued to the end of a URL belong to the surrounding text, not to the link. */
+const TRAILING_MARKUP = /[*_~|[\]]$/;
+
+/** Length of the URL at the start of `candidate`, without trailing markup or an unbalanced closing parenthesis. */
+function urlLength(candidate: string): number {
+  let end = candidate.length;
+  for (;;) {
+    const url = candidate.slice(0, end);
+    const unbalanced = url.endsWith(')') && url.split(')').length > url.split('(').length;
+    if (!TRAILING_MARKUP.test(url) && !unbalanced) return end;
+    end--;
+  }
+}
+
+/** Escapes markdown in a note's text on one line, leaving URLs untouched so they stay clickable. */
+function noteText(text: string): string {
+  const line = oneLine(text);
+  let out = '';
+  let last = 0;
+  for (const match of line.matchAll(/https?:\/\/[^\s<>`]+/g)) {
+    const url = match[0].slice(0, urlLength(match[0]));
+    out += escapeMarkdown(line.slice(last, match.index)) + url;
+    last = match.index + url.length;
+  }
+  return out + escapeMarkdown(line.slice(last));
+}
+
+/** Trailing "Notas" section for summary.md; empty when there are no notes. */
+export function formatNotesSection(notes: Note[]): string {
+  if (notes.length === 0) return '';
+  const lines = [...notes].sort((a, b) => a.atMs - b.atMs).map((n) => `- [${formatTimestamp(n.atMs)}] **${noteAuthor(n.author)}**: ${noteText(n.text)}`);
+  return `## Notas\n\n${lines.join('\n')}\n`;
+}
+
+/** Merges per-speaker segments into one timeline; notes are interleaved by time but are not speech. */
+export function mergeTranscript(tracks: SpeakerTrack[], notes: Note[] = []): MergedTranscript {
   const all: Array<LabelledSegment & { order: number }> = [];
   tracks.forEach((track, order) => {
     for (const s of track.segments) {
@@ -104,6 +154,17 @@ export function mergeTranscript(tracks: SpeakerTrack[]): MergedTranscript {
     }
   }
 
-  const markdown = merged.map((s) => `[${formatTimestamp(s.startMs)}] **${s.speaker}**: ${s.text}`).join('\n\n');
+  const entries: Array<{ atMs: number; line: string }> = merged.map((s) => ({
+    atMs: s.startMs,
+    line: `[${formatTimestamp(s.startMs)}] **${s.speaker}**: ${s.text}`
+  }));
+  // A note goes before the first block that starts after it; a block spanning its time stays whole.
+  for (const n of [...notes].sort((a, b) => a.atMs - b.atMs)) {
+    const line = `[${formatTimestamp(n.atMs)}] 📎 **Nota de ${noteAuthor(n.author)}**: ${noteText(n.text)}`;
+    const at = entries.findIndex((e) => e.atMs > n.atMs);
+    entries.splice(at === -1 ? entries.length : at, 0, { atMs: n.atMs, line });
+  }
+
+  const markdown = entries.map((e) => e.line).join('\n\n');
   return { segments: merged, markdown: markdown === '' ? '' : markdown + '\n' };
 }
