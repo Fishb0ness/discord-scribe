@@ -98,12 +98,31 @@ const escapeMarkdown = (text: string) => text.replace(/[\\*_`~|[\]<>]/g, '\\$&')
 /** Escapes markdown in a note's author. */
 const noteAuthor = (author: string) => escapeMarkdown(oneLine(author));
 
+/** Markdown metacharacters glued to the end of a URL belong to the surrounding text, not to the link. */
+const TRAILING_MARKUP = /[*_~|[\]]$/;
+
+/** Length of the URL at the start of `candidate`, without trailing markup or an unbalanced closing parenthesis. */
+function urlLength(candidate: string): number {
+  let end = candidate.length;
+  for (;;) {
+    const url = candidate.slice(0, end);
+    const unbalanced = url.endsWith(')') && url.split(')').length > url.split('(').length;
+    if (!TRAILING_MARKUP.test(url) && !unbalanced) return end;
+    end--;
+  }
+}
+
 /** Escapes markdown in a note's text on one line, leaving URLs untouched so they stay clickable. */
 function noteText(text: string): string {
-  return oneLine(text)
-    .split(/(https?:\/\/\S+)/)
-    .map((part, i) => (i % 2 === 1 ? part : escapeMarkdown(part)))
-    .join('');
+  const line = oneLine(text);
+  let out = '';
+  let last = 0;
+  for (const match of line.matchAll(/https?:\/\/[^\s<>`]+/g)) {
+    const url = match[0].slice(0, urlLength(match[0]));
+    out += escapeMarkdown(line.slice(last, match.index)) + url;
+    last = match.index + url.length;
+  }
+  return out + escapeMarkdown(line.slice(last));
 }
 
 /** Trailing "Notas" section for summary.md; empty when there are no notes. */

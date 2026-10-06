@@ -168,6 +168,12 @@ describe('note ordering and markdown escaping', () => {
     expect(formatNotesSection([note])).toBe(`## Notas\n\n- [00:00] **a\\*b\\_c**: ${expected}\n`);
   });
 
+  it('escapes markdown metacharacters glued to a URL but not the URL itself', () => {
+    const note = { author: 'Ana', text: 'ver **https://x.dev/a_b** `https://y.dev` <https://z.dev>| (https://w.dev/p_(q))', atMs: 0 };
+    const expected = 'ver \\*\\*https://x.dev/a_b\\*\\* \\`https://y.dev\\` \\<https://z.dev\\>\\| (https://w.dev/p_(q))';
+    expect(formatNotesSection([note])).toBe(`## Notas\n\n- [00:00] **Ana**: ${expected}\n`);
+  });
+
   it('leaves speaker rendering unchanged', () => {
     const { markdown } = mergeTranscript([{ speaker: 'A_b*', segments: [seg(0, 1000, 'x_y')] }]);
     expect(markdown).toBe('[00:00] **A_b*** : x_y\n'.replace('*** :', '***:'));
