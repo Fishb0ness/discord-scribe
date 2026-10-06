@@ -13,6 +13,7 @@ invitar a tu bot (consulta [Privacidad y acceso](#privacidad-y-acceso)).
 
 ```
 /grabar  ->  el bot entra en tu canal de voz, anuncia la grabación y se renombra "[GRABANDO] ..."
+/nota    ->  (durante la grabación) añade un enlace o una nota a la transcripción y al resumen
 /parar   ->  WAV por usuario -> whisper-cli -> transcripción fusionada -> resumen con claude -p
              recordings/<YYYY-MM-DD_HHmm>-<canal>/{transcript.md,summary.md}
              resumen publicado en el canal de texto donde se usó /grabar (+ transcript.md adjunto)
@@ -34,7 +35,7 @@ Windows.
   servidores, ignora las interacciones de cualquier otro sitio (incluidos los mensajes directos) y **abandona cualquier
   otro servidor** al que lo añadan.
 - **Solo las personas que tú permitas pueden iniciar una grabación.** Restringe `/grabar` con los permisos de comandos
-  de Discord (más abajo). `/parar` solo funciona para quien esté en el canal de voz que se está grabando.
+  de Discord (más abajo). `/parar` y `/nota` solo funcionan para quien esté en el canal de voz que se está grabando.
 - **Avisa a las personas a las que grabas.** Grabar voces tiene consecuencias legales (RGPD y leyes similares). El bot
   anuncia la grabación en el canal de texto y se renombra a `[GRABANDO] ...` durante toda la sesión, pero obtener el
   consentimiento es responsabilidad tuya.
@@ -151,6 +152,11 @@ npm start
 En un canal de voz, ejecuta `/grabar`; cuando termines, `/parar`. La grabación también se detiene sola cuando el canal
 se queda vacío (tras 15 s), cuando el bot es movido o desconectado, cuando el cifrado de voz sigue fallando o cuando no
 se oye a nadie durante los primeros 5 minutos.
+
+Si alguien dice «paso el enlace» durante la reunión, escríbelo con `/nota texto:<enlace o comentario>` (solo lo puede
+usar quien esté en el canal grabado). La nota se guarda con la hora a la que la escribiste: aparece en `transcript.md`
+junto a lo que se estaba diciendo (`[12:34] 📎 **Nota de Ana**: https://...`), el resumen la tiene en cuenta y
+`summary.md` termina con una sección «Notas» que las lista todas. Solo tú ves la confirmación de cada nota.
 
 ### Ejecutar como servicio
 
