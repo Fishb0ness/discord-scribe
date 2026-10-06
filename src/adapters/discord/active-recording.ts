@@ -41,7 +41,7 @@ export class ActiveRecording {
   private readonly onAutoStop: ActiveRecordingOptions['onAutoStop'];
   private readonly recovery = new EncryptionRecoveryMonitor(5);
   private recorder!: SessionRecorder;
-  private startNs = 0n;
+  private startNs: bigint | null = null;
   private connection: VoiceConnection | null = null;
   private stopped = false;
   private reconnecting = false;
@@ -61,6 +61,7 @@ export class ActiveRecording {
 
   /** Milliseconds since the audio clock started: the same zero as the offsets of the per-speaker WAVs. */
   elapsedMs(): number {
+    if (this.startNs === null) return 0; // not started yet: there is no zero to measure from
     return Number(process.hrtime.bigint() - this.startNs) / 1e6;
   }
 
