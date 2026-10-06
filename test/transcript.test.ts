@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatTimestamp, isHallucination, mergeTranscript, parseWhisperJson } from '../src/domain/transcript.js';
+import { formatNotesSection, formatTimestamp, isHallucination, mergeTranscript, parseWhisperJson } from '../src/domain/transcript.js';
 
 const seg = (startMs: number, endMs: number, text: string) => ({ startMs, endMs, text });
 
@@ -107,5 +107,50 @@ describe('mergeTranscript', () => {
     const r = mergeTranscript([{ speaker: 'Ana', segments: [seg(0, 1, '[BLANK_AUDIO]')] }]);
     expect(r.segments).toEqual([]);
     expect(r.markdown).toBe('');
+  });
+});
+
+describe('mergeTranscript with notes', () => {
+  const ana = { speaker: 'Ana', segments: [seg(0, 1000, 'Hola'), seg(20_000, 21_000, 'Seguimos')] };
+  const luis = { speaker: 'Luis', segments: [seg(5000, 6000, 'Vale')] };
+
+  it('interleaves notes at their timestamp without splitting or merging speech', () => {
+    const { markdown, segments } = mergeTranscript([ana, luis], [{ author: 'Luis', text: 'https://x.dev/doc', atMs: 10_000 }]);
+    expect(markdown).toBe(
+      '[00:00] **Ana**: Hola\n\n[00:05] **Luis**: Vale\n\n[00:10] 📎 **Nota de Luis**: https://x.dev/doc\n\n[00:20] **Ana**: Seguimos\n'
+    );
+    // Notes are not speech.
+    expect(segments.map((s) => s.text)).toEqual(['Hola', 'Vale', 'Seguimos']);
+  });
+
+  it('does not put a note inside a speaker block that spans its time', () => {
+    const long = { speaker: 'Ana', segments: [seg(0, 5000, 'Uno'), seg(6000, 9000, 'Dos')] };
+    const { markdown } = mergeTranscript([long], [{ author: 'Luis', text: 'n', atMs: 5500 }]);
+    expect(markdown).toBe('[00:00] **Ana**: Uno Dos\n\n[00:05] 📎 **Nota de Luis**: n\n');
+  });
+
+  it('sorts notes by time and collapses newlines into one line', () => {
+    const { markdown } = mergeTranscript([], [
+      { author: 'B', text: 'dos', atMs: 9000 },
+      { author: 'A', text: 'uno\nlinea', atMs: 1000 }
+    ]);
+    expect(markdown).toBe('[00:01] 📎 **Nota de A**: uno linea\n\n[00:09] 📎 **Nota de B**: dos\n');
+  });
+
+  it('is unchanged when there are no notes', () => {
+    expect(mergeTranscript([ana]).markdown).toBe(mergeTranscript([ana], []).markdown);
+    expect(mergeTranscript([], []).markdown).toBe('');
+  });
+});
+
+describe('formatNotesSection', () => {
+  it('lists every note with time, author and text', () => {
+    expect(formatNotesSection([{ author: 'Ana', text: 'https://x.dev', atMs: 65_000 }])).toBe(
+      '## Notas\n\n- [01:05] **Ana**: https://x.dev\n'
+    );
+  });
+
+  it('is empty without notes', () => {
+    expect(formatNotesSection([])).toBe('');
   });
 });

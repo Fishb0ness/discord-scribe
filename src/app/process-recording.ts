@@ -1,5 +1,5 @@
 import { formatDateTime } from '../domain/naming.js';
-import { mergeTranscript, type SpeakerTrack } from '../domain/transcript.js';
+import { formatNotesSection, mergeTranscript, type Note, type SpeakerTrack } from '../domain/transcript.js';
 import type { ChatNotifier, OutputStore, ProcessResult, Summarizer, Transcriber } from './ports.js';
 
 export interface RecordedTrack {
@@ -12,6 +12,8 @@ export interface ProcessRecordingInput {
   textChannelId: string;
   startedAt: Date;
   tracks: RecordedTrack[];
+  /** Notes added with /nota during the recording (offsets from recording start). */
+  notes?: Note[];
 }
 
 export interface ProcessRecordingDeps {
@@ -30,6 +32,7 @@ export async function processRecording(deps: ProcessRecordingDeps, input: Proces
   const dir = await deps.output.createRecordingDir(input.startedAt, input.channelName);
   const result: ProcessResult = { channelName: input.channelName, dir, warnings };
 
+  const notes = input.notes ?? [];
   const speakerTracks: SpeakerTrack[] = [];
   const transcribed: string[] = [];
   for (const track of input.tracks) {
@@ -43,7 +46,7 @@ export async function processRecording(deps: ProcessRecordingDeps, input: Proces
     }
   }
 
-  const merged = mergeTranscript(speakerTracks);
+  const merged = mergeTranscript(speakerTracks, notes);
   const header = `# Transcripción: ${input.channelName}\n\n_${formatDateTime(input.startedAt)}_\n\n`;
   result.transcriptPath = await deps.output.writeFile(dir, 'transcript.md', header + merged.markdown);
 
@@ -62,7 +65,7 @@ export async function processRecording(deps: ProcessRecordingDeps, input: Proces
       result.summaryPath = await deps.output.writeFile(
         dir,
         'summary.md',
-        `# Resumen: ${input.channelName}\n\n_${formatDateTime(input.startedAt)}_\n\n${summary}\n`
+        `# Resumen: ${input.channelName}\n\n_${formatDateTime(input.startedAt)}_\n\n${summary}\n${notes.length > 0 ? '\n' + formatNotesSection(notes) : ''}`
       );
     } catch (e) {
       log('Summarization failed', e);

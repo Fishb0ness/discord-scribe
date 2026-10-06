@@ -13,7 +13,15 @@ export interface LabelledSegment extends Segment {
   speaker: string;
 }
 
+/** A text note a participant added during the recording; `atMs` is the offset from recording start. */
+export interface Note {
+  author: string;
+  text: string;
+  atMs: number;
+}
+
 export interface MergedTranscript {
+  /** Speech only: notes are never counted here. */
   segments: LabelledSegment[];
   markdown: string;
 }
@@ -83,7 +91,17 @@ export function isHallucination(text: string): boolean {
   return HALLUCINATION_SUBSTRINGS.some((s) => n.includes(s));
 }
 
-export function mergeTranscript(tracks: SpeakerTrack[]): MergedTranscript {
+const oneLine = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+/** Trailing "Notas" section for summary.md; empty when there are no notes. */
+export function formatNotesSection(notes: Note[]): string {
+  if (notes.length === 0) return '';
+  const lines = [...notes].sort((a, b) => a.atMs - b.atMs).map((n) => `- [${formatTimestamp(n.atMs)}] **${n.author}**: ${oneLine(n.text)}`);
+  return `## Notas\n\n${lines.join('\n')}\n`;
+}
+
+/** Merges per-speaker segments into one timeline; notes are interleaved by time but are not speech. */
+export function mergeTranscript(tracks: SpeakerTrack[], notes: Note[] = []): MergedTranscript {
   const all: Array<LabelledSegment & { order: number }> = [];
   tracks.forEach((track, order) => {
     for (const s of track.segments) {
@@ -104,6 +122,17 @@ export function mergeTranscript(tracks: SpeakerTrack[]): MergedTranscript {
     }
   }
 
-  const markdown = merged.map((s) => `[${formatTimestamp(s.startMs)}] **${s.speaker}**: ${s.text}`).join('\n\n');
+  const entries: Array<{ atMs: number; line: string }> = merged.map((s) => ({
+    atMs: s.startMs,
+    line: `[${formatTimestamp(s.startMs)}] **${s.speaker}**: ${s.text}`
+  }));
+  // A note goes before the first block that starts after it; a block spanning its time stays whole.
+  for (const n of [...notes].sort((a, b) => a.atMs - b.atMs)) {
+    const line = `[${formatTimestamp(n.atMs)}] 📎 **Nota de ${n.author}**: ${oneLine(n.text)}`;
+    const at = entries.findIndex((e) => e.atMs > n.atMs);
+    entries.splice(at === -1 ? entries.length : at, 0, { atMs: n.atMs, line });
+  }
+
+  const markdown = entries.map((e) => e.line).join('\n\n');
   return { segments: merged, markdown: markdown === '' ? '' : markdown + '\n' };
 }
